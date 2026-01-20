@@ -17,17 +17,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <!-- Google Fonts: Noto Sans TC -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { 
-                        sans: ['"Noto Sans TC"', 'sans-serif']
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        mono: ['"Orbitron"', 'monospace'] // 用於時鐘
                     },
                     colors: {
                         neon: { blue: '#00f3ff', purple: '#bc13fe', pink: '#ff0055', green: '#0aff00' },
@@ -37,9 +38,9 @@
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'blob': 'blob 7s infinite',
-                        'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                         'slide-up-modal': 'slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'fade-in-up': 'fadeInUp 0.3s ease-out forwards'
+                        'keypad-up': 'keypadUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
@@ -49,9 +50,8 @@
                             '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                             '100%': { transform: 'translate(0px, 0px) scale(1)' }
                         },
-                        slideDown: { from: { transform: 'translateY(-100%)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
                         slideUpModal: { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
-                        fadeInUp: { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } }
+                        keypadUp: { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -61,51 +61,31 @@
         body { 
             background-color: #050511; color: #ffffff;
             font-family: "Noto Sans TC", sans-serif;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
-        
-        .bg-animation {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: #050511;
-            overflow: hidden;
-        }
-        .bg-blob {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
-            animation: blob 10s infinite;
-        }
-        
-        .glass-panel {
-            background: rgba(20, 20, 40, 0.75);
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-        }
-        .glass-input {
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white; transition: all 0.3s;
-        }
+        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #050511; overflow: hidden; }
+        .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: blob 10s infinite; }
+        .glass-panel { background: rgba(20, 20, 40, 0.75); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
+        .glass-input { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; }
         .glass-input:focus { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.15); outline: none; }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
-        .toast-msg { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; border-left: 4px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; animation: slideDown 0.3s ease-out; }
-        .toast-success { border-color: #0aff00; }
-        .toast-error { border-color: #ff0055; }
-        .toast-info { border-color: #00f3ff; }
-
-        /* Custom Checkbox */
-        .custom-checkbox:checked {
-            background-color: #00f3ff;
-            border-color: #00f3ff;
-        }
+        .toast-msg { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; border-left: 4px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
+        .toast-success { border-color: #0aff00; } .toast-error { border-color: #ff0055; } .toast-info { border-color: #00f3ff; }
+        .custom-checkbox:checked { background-color: #00f3ff; border-color: #00f3ff; }
         
-        /* FAB Menu Animation Delays */
-        .fab-item-1 { animation-delay: 0.05s; }
-        .fab-item-2 { animation-delay: 0.1s; }
-        .fab-item-3 { animation-delay: 0.15s; }
-        .fab-item-4 { animation-delay: 0.2s; }
+        /* Keypad Styles */
+        .keypad-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; font-size: 1.5rem; font-weight: bold; border-radius: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.1s;
+        }
+        .keypad-btn:active { background: rgba(0, 243, 255, 0.2); border-color: #00f3ff; transform: scale(0.95); }
+        .keypad-submit { background: linear-gradient(to right, #00f3ff, #bc13fe); border: none; }
+        
+        /* Date Input Dark Mode Fix */
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     </style>
 </head>
 <body class="text-white pb-24">
@@ -114,226 +94,189 @@
     <div class="bg-animation">
         <div class="bg-blob bg-neon-purple w-96 h-96 top-0 -left-20"></div>
         <div class="bg-blob bg-neon-blue w-96 h-96 bottom-0 -right-20 animation-delay-2000"></div>
-        <div class="bg-blob bg-neon-pink w-64 h-64 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animation-delay-4000"></div>
     </div>
 
-    <!-- 客製化通知容器 (Toast) -->
+    <!-- Toast & Confirm -->
     <div id="toast-container"></div>
-
-    <!-- 客製化確認視窗 (Custom Confirm) -->
     <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-6 transform scale-95 transition-transform duration-300" id="confirm-box">
-            <div class="w-12 h-12 rounded-full bg-neon-pink/20 flex items-center justify-center text-neon-pink mb-4 mx-auto">
-                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-            </div>
+            <div class="w-12 h-12 rounded-full bg-neon-pink/20 flex items-center justify-center text-neon-pink mb-4 mx-auto"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
             <h3 class="text-xl font-bold text-center mb-2">確認操作</h3>
             <p class="text-gray-400 text-center text-sm mb-6" id="confirm-msg">您確定要執行此操作嗎？</p>
             <div class="flex gap-3">
-                <button onclick="closeConfirm(false)" class="flex-1 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium transition-colors">取消</button>
-                <button id="confirm-yes-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-neon-pink to-red-600 text-white font-bold shadow-lg shadow-red-900/50 hover:opacity-90 transition-opacity">確定</button>
+                <button onclick="closeConfirm(false)" class="flex-1 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium">取消</button>
+                <button id="confirm-yes-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-neon-pink to-red-600 text-white font-bold">確定</button>
             </div>
         </div>
     </div>
 
-    <!-- 登入畫面 (Auth Screen) -->
+    <!-- Auth Screen -->
     <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-[#050511]">
         <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
-            
             <div class="glass-panel w-full max-w-[420px] p-8 sm:p-10 rounded-[2.5rem] border-t border-white/20 relative overflow-hidden animate-slide-up-modal mx-auto">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink"></div>
-                
                 <div class="text-center mb-8">
-                    <div class="w-24 h-24 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-neon-blue/20 mb-5 animate-float">
-                        <i class="fa-solid fa-robot text-5xl text-white"></i>
-                    </div>
+                    <div class="w-24 h-24 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-neon-blue/20 mb-5 animate-float"><i class="fa-solid fa-robot text-5xl text-white"></i></div>
                     <h1 class="text-3xl font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-1">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.4</p>
+                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.5</p>
                 </div>
-
                 <div id="login-form" class="space-y-5">
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors text-lg"></i>
-                        </div>
-                        <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none">
-                    </div>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors text-lg"></i>
-                        </div>
-                        <input type="password" id="password" placeholder="密碼" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none">
-                    </div>
-                    
-                    <button onclick="handleLogin()" id="login-btn" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple rounded-xl font-bold text-white text-lg shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:shadow-[0_0_30px_rgba(188,19,254,0.5)] transition-all active:scale-95">
-                        進入系統
-                    </button>
+                    <div class="relative group"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors text-lg"></i></div><input type="email" id="email" placeholder="電子郵件" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none"></div>
+                    <div class="relative group"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors text-lg"></i></div><input type="password" id="password" placeholder="密碼" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none"></div>
+                    <button onclick="handleLogin()" id="login-btn" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple rounded-xl font-bold text-white text-lg shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:shadow-[0_0_30px_rgba(188,19,254,0.5)] transition-all active:scale-95">進入系統</button>
                 </div>
-
-                <div class="mt-6 text-center">
-                    <span onclick="toggleMode()" class="cursor-pointer text-sm text-gray-400 hover:text-white transition-colors py-2 px-4 rounded-lg hover:bg-white/5 select-none">
-                        還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>
-                    </span>
-                </div>
-                
-                <div class="my-8 flex items-center gap-4">
-                    <div class="h-px bg-white/10 flex-1"></div>
-                    <span class="text-xs text-gray-500 font-medium">快速登入</span>
-                    <div class="h-px bg-white/10 flex-1"></div>
-                </div>
-                
+                <div class="mt-6 text-center"><span onclick="toggleMode()" class="cursor-pointer text-sm text-gray-400 hover:text-white transition-colors py-2 px-4 rounded-lg hover:bg-white/5 select-none">還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span></span></div>
+                <div class="my-8 flex items-center gap-4"><div class="h-px bg-white/10 flex-1"></div><span class="text-xs text-gray-500 font-medium">快速登入</span><div class="h-px bg-white/10 flex-1"></div></div>
                 <div class="space-y-4">
-                     <button onclick="handleGoogleLogin()" class="w-full py-3.5 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors active:scale-95 text-sm">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
-                        Google 帳戶登入
-                    </button>
-
-                    <button onclick="handleGuest()" class="w-full py-3.5 border border-white/20 text-gray-300 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-white/5 hover:text-neon-green hover:border-neon-green/30 transition-all active:scale-95 text-sm group">
-                        <i class="fa-solid fa-user-secret group-hover:text-neon-green transition-colors"></i>
-                        訪客模式試用
-                    </button>
+                     <button onclick="handleGoogleLogin()" class="w-full py-3.5 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors active:scale-95 text-sm"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">Google 帳戶登入</button>
+                    <button onclick="handleGuest()" class="w-full py-3.5 border border-white/20 text-gray-300 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-white/5 hover:text-neon-green hover:border-neon-green/30 transition-all active:scale-95 text-sm group"><i class="fa-solid fa-user-secret group-hover:text-neon-green transition-colors"></i>訪客模式試用</button>
                 </div>
             </div>
-            
-            <p class="text-[10px] text-gray-600 mt-8 font-medium tracking-wider uppercase opacity-50 text-center">Secure System V3.4</p>
         </div>
     </div>
 
-    <!-- 主程式介面 (Main App) -->
+    <!-- App Container -->
     <div id="app-container" class="hidden opacity-0 transition-opacity duration-700">
         
-        <div id="guest-banner" class="hidden bg-gradient-to-r from-neon-green/20 to-transparent border-b border-neon-green/30 text-neon-green px-4 py-2 text-xs font-bold flex items-center justify-center">
-            <i class="fa-solid fa-eye mr-2"></i> 訪客模式：資料僅存於記憶體，離開即消失
-        </div>
+        <div id="guest-banner" class="hidden bg-gradient-to-r from-neon-green/20 to-transparent border-b border-neon-green/30 text-neon-green px-4 py-2 text-xs font-bold flex items-center justify-center"><i class="fa-solid fa-eye mr-2"></i> 訪客模式：資料僅存於記憶體</div>
 
         <header class="pt-6 px-6 pb-2">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-lg shadow-purple-500/20">
-                        <img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover">
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.4 System</p>
-                        <h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2>
-                    </div>
+                    <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-lg"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.5 System</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
-                <button onclick="handleLogout()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-md">
-                    <i class="fa-solid fa-power-off"></i>
-                </button>
+                <button onclick="handleLogout()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-md"><i class="fa-solid fa-power-off"></i></button>
             </div>
-
+            <!-- Dashboard Card (Hidden on Attendance view) -->
             <div id="dashboard-card" class="glass-panel rounded-[2rem] p-6 relative overflow-hidden group border border-white/10">
                 <div class="absolute -right-12 -top-12 w-48 h-48 bg-neon-blue/20 blur-3xl rounded-full group-hover:bg-neon-purple/20 transition-colors duration-500"></div>
-                
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <p class="text-gray-400 text-xs font-medium mb-1"><i class="fa-solid fa-coins text-neon-blue mr-1"></i> 本月淨利潤</p>
-                        <h1 class="text-4xl font-black text-white tracking-tight" id="net-profit">$0</h1>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white border border-white/5" id="profit-margin">0%</span>
-                    </div>
-                </div>
-                
-                <div class="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-4">
-                    <div id="profit-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-purple w-0 transition-all duration-1000"></div>
-                </div>
+                <div class="flex justify-between items-start mb-2"><div><p class="text-gray-400 text-xs font-medium mb-1"><i class="fa-solid fa-coins text-neon-blue mr-1"></i> 本月淨利潤</p><h1 class="text-4xl font-black text-white tracking-tight" id="net-profit">$0</h1></div><div class="text-right"><span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white border border-white/5" id="profit-margin">0%</span></div></div>
+                <div class="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-4"><div id="profit-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-purple w-0 transition-all duration-1000"></div></div>
             </div>
         </header>
 
         <main class="px-4 pb-28 relative z-10 max-w-2xl mx-auto mt-4">
             
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div onclick="switchView('income')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-green/50 transition-all active:scale-95">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#0aff00]"></div>
-                        <p class="text-xs text-gray-400 font-bold">總收入</p>
-                    </div>
-                    <p class="text-lg font-bold text-white tracking-wide" id="total-income">$0</p>
+            <!-- Standard List & Stats Views -->
+            <div id="main-views">
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div onclick="switchView('income')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-green/50 transition-all active:scale-95"><div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#0aff00]"></div><p class="text-xs text-gray-400 font-bold">總收入</p></div><p class="text-lg font-bold text-white tracking-wide" id="total-income">$0</p></div>
+                    <div onclick="switchView('expense')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-pink/50 transition-all active:scale-95"><div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-neon-pink shadow-[0_0_8px_#ff0055]"></div><p class="text-xs text-gray-400 font-bold">總支出</p></div><p class="text-lg font-bold text-white tracking-wide" id="total-expense">$0</p></div>
                 </div>
-                <div onclick="switchView('expense')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-pink/50 transition-all active:scale-95">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-2 h-2 rounded-full bg-neon-pink shadow-[0_0_8px_#ff0055]"></div>
-                        <p class="text-xs text-gray-400 font-bold">總支出</p>
+
+                <div id="list-view" class="space-y-4">
+                    <div class="flex items-center justify-between px-2 mb-2">
+                        <h3 class="text-sm font-bold text-gray-300 tracking-wide" id="list-title">最新動態</h3>
+                        <button onclick="switchView('dashboard')" id="back-btn" class="hidden text-xs text-neon-blue hover:text-white transition-colors bg-neon-blue/10 px-3 py-1 rounded-full"><i class="fa-solid fa-arrow-left mr-1"></i> 返回</button>
                     </div>
-                    <p class="text-lg font-bold text-white tracking-wide" id="total-expense">$0</p>
+                    <div id="chart-container" class="glass-panel p-4 rounded-3xl mb-4 h-48 relative border border-white/5"><canvas id="mainChart"></canvas></div>
+                    <div id="dynamic-list" class="space-y-3 pb-20 min-h-[200px]"></div>
                 </div>
             </div>
 
-            <div id="list-view" class="space-y-4">
-                <div class="flex items-center justify-between px-2 mb-2">
-                    <h3 class="text-sm font-bold text-gray-300 tracking-wide" id="list-title">最新動態</h3>
-                    <button onclick="switchView('dashboard')" id="back-btn" class="hidden text-xs text-neon-blue hover:text-white transition-colors bg-neon-blue/10 px-3 py-1 rounded-full">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> 返回
+            <!-- Attendance View (New) -->
+            <div id="attendance-view" class="hidden space-y-6 text-center animate-slide-up-modal pt-4">
+                <div class="glass-panel p-8 rounded-full w-64 h-64 mx-auto flex flex-col items-center justify-center border-4 border-white/10 shadow-[0_0_50px_rgba(0,243,255,0.1)] relative">
+                    <div class="absolute inset-0 rounded-full border-4 border-t-neon-blue border-r-neon-purple border-b-transparent border-l-transparent animate-spin opacity-50" style="animation-duration: 3s;"></div>
+                    <p class="text-gray-400 text-sm mb-2 font-mono" id="clock-date">--/--</p>
+                    <h1 class="text-5xl font-black text-white font-mono tracking-wider" id="clock-time">00:00</h1>
+                    <p class="text-neon-green text-xs mt-2 font-bold animate-pulse" id="work-status-text">準備就緒</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 max-w-xs mx-auto">
+                    <button onclick="startWork()" id="btn-clock-in" class="py-4 bg-gradient-to-r from-neon-green to-emerald-600 rounded-2xl font-black text-white text-lg shadow-lg hover:scale-105 transition-transform active:scale-95">
+                        <i class="fa-solid fa-play mr-2"></i> 上班打卡
+                    </button>
+                    <button onclick="endWork()" id="btn-clock-out" class="hidden py-4 bg-gradient-to-r from-neon-pink to-red-600 rounded-2xl font-black text-white text-lg shadow-lg hover:scale-105 transition-transform active:scale-95">
+                        <i class="fa-solid fa-stop mr-2"></i> 下班結算
                     </button>
                 </div>
                 
-                <div id="chart-container" class="glass-panel p-4 rounded-3xl mb-4 h-48 relative border border-white/5">
-                    <canvas id="mainChart"></canvas>
+                <div class="text-left glass-panel p-4 rounded-xl mt-6">
+                    <h3 class="text-xs text-gray-400 font-bold mb-2">計薪規則</h3>
+                    <ul class="text-xs text-gray-500 space-y-1 list-disc pl-4">
+                        <li>每半小時 $25 (時薪 $50)</li>
+                        <li>不足 30 分鐘以 0.5 小時計算</li>
+                        <li>下班自動儲存至收入記錄</li>
+                    </ul>
                 </div>
-
-                <div id="dynamic-list" class="space-y-3 pb-20 min-h-[200px]"></div>
             </div>
+
         </main>
 
-        <!-- Floating Action Button (FAB) -->
-        <div class="fixed bottom-24 right-6 z-40">
-            <button onclick="toggleFab()" id="fab-main" class="w-14 h-14 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-[0_0_20px_rgba(0,243,255,0.4)] flex items-center justify-center text-2xl transition-transform duration-300 active:scale-90 z-50 relative border-2 border-white/20">
-                <i class="fa-solid fa-plus transition-transform duration-300" id="fab-icon"></i>
-            </button>
-            
-            <!-- 文字顯示優化: whitespace-nowrap 確保不換行 -->
+        <!-- FAB -->
+        <div class="fixed bottom-24 right-6 z-40" id="fab-container">
+            <button onclick="toggleFab()" id="fab-main" class="w-14 h-14 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-[0_0_20px_rgba(0,243,255,0.4)] flex items-center justify-center text-2xl transition-transform duration-300 active:scale-90 z-50 relative border-2 border-white/20"><i class="fa-solid fa-plus transition-transform duration-300" id="fab-icon"></i></button>
             <div id="fab-menu" class="absolute bottom-16 right-0 flex flex-col items-end gap-3 transition-all duration-300 transform scale-0 opacity-0 origin-bottom-right pointer-events-none">
-                <button onclick="openEntry('camel', '新增駱駝漆記錄')" class="flex items-center gap-3 group pointer-events-auto fab-item-1 animate-fade-in-up">
-                    <span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">駱駝漆</span>
-                    <div class="w-10 h-10 rounded-full glass-panel border border-neon-blue text-neon-blue flex items-center justify-center hover:bg-neon-blue hover:text-black transition-all shadow-lg shadow-neon-blue/20"><i class="fa-solid fa-building"></i></div>
-                </button>
-                <button onclick="openEntry('reels', '新增 Reels 宣傳')" class="flex items-center gap-3 group pointer-events-auto fab-item-2 animate-fade-in-up">
-                    <span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">Reels</span>
-                    <div class="w-10 h-10 rounded-full glass-panel border border-neon-purple text-neon-purple flex items-center justify-center hover:bg-neon-purple hover:text-black transition-all shadow-lg shadow-neon-purple/20"><i class="fa-brands fa-instagram"></i></div>
-                </button>
-                <button onclick="openEntry('kwuntong', '新增觀塘廣場記錄')" class="flex items-center gap-3 group pointer-events-auto fab-item-3 animate-fade-in-up">
-                    <span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">觀塘</span>
-                    <div class="w-10 h-10 rounded-full glass-panel border border-orange-500 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-black transition-all shadow-lg shadow-orange-500/20"><i class="fa-solid fa-shop"></i></div>
-                </button>
-                <button onclick="openEntry('expense', '新增支出項目')" class="flex items-center gap-3 group pointer-events-auto fab-item-4 animate-fade-in-up">
-                    <span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">支出</span>
-                    <div class="w-10 h-10 rounded-full glass-panel border border-neon-pink text-neon-pink flex items-center justify-center hover:bg-neon-pink hover:text-white transition-all shadow-lg shadow-neon-pink/20"><i class="fa-solid fa-cart-shopping"></i></div>
-                </button>
+                <button onclick="openEntry('camel', '新增駱駝漆記錄')" class="flex items-center gap-3 group pointer-events-auto fab-item-1 animate-fade-in-up"><span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">駱駝漆</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-blue text-neon-blue flex items-center justify-center"><i class="fa-solid fa-building"></i></div></button>
+                <button onclick="openEntry('reels', '新增 Reels 宣傳')" class="flex items-center gap-3 group pointer-events-auto fab-item-2 animate-fade-in-up"><span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">Reels</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-purple text-neon-purple flex items-center justify-center"><i class="fa-brands fa-instagram"></i></div></button>
+                <button onclick="openEntry('kwuntong', '新增觀塘廣場記錄')" class="flex items-center gap-3 group pointer-events-auto fab-item-3 animate-fade-in-up"><span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">觀塘</span><div class="w-10 h-10 rounded-full glass-panel border border-orange-500 text-orange-500 flex items-center justify-center"><i class="fa-solid fa-shop"></i></div></button>
+                <button onclick="openEntry('expense', '新增支出項目')" class="flex items-center gap-3 group pointer-events-auto fab-item-4 animate-fade-in-up"><span class="bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/20 font-bold shadow-lg whitespace-nowrap">支出</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-pink text-neon-pink flex items-center justify-center"><i class="fa-solid fa-cart-shopping"></i></div></button>
             </div>
         </div>
 
+        <!-- Bottom Navigation -->
         <div class="fixed bottom-0 w-full glass-panel h-20 z-30 rounded-t-[2rem] border-t border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
             <div class="flex justify-around items-center h-full max-w-2xl mx-auto px-4 pb-2">
-                <button onclick="switchView('dashboard')" class="nav-item active flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-dashboard"><i class="fa-solid fa-chart-line text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">概覽</span></button>
-                <button onclick="switchView('camel')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-camel"><i class="fa-solid fa-building text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
-                <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">Reels</span></button>
-                <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">觀塘</span></button>
-                <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-expense"><i class="fa-solid fa-file-invoice-dollar text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">支出</span></button>
+                <button onclick="switchView('dashboard')" class="nav-item active flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-dashboard"><i class="fa-solid fa-chart-line text-lg mb-1"></i><span class="text-[10px] font-bold">概覽</span></button>
+                <button onclick="switchView('camel')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-camel"><i class="fa-solid fa-building text-lg mb-1"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
+                <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1"></i><span class="text-[10px] font-bold">Reels</span></button>
+                <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1"></i><span class="text-[10px] font-bold">觀塘</span></button>
+                <!-- Attendance Tab -->
+                <button onclick="switchView('attendance')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-attendance"><i class="fa-solid fa-clock text-lg mb-1"></i><span class="text-[10px] font-bold">打卡</span></button>
             </div>
         </div>
 
-        <!-- Data Entry Modal -->
-        <div id="entry-modal" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeEntry()"></div>
-            <div class="absolute bottom-0 left-0 right-0 glass-panel rounded-t-[2.5rem] p-6 sm:p-8 transform translate-y-full transition-transform duration-300 max-w-3xl mx-auto border-t border-white/20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" id="modal-content">
-                <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-6 opacity-50"></div>
-                <h3 class="text-2xl font-black text-white mb-8 flex items-center justify-center gap-3 text-center" id="modal-title">
-                    <i class="fa-solid fa-pen-to-square"></i> 新增記錄
-                </h3>
-                <div id="modal-form-container" class="space-y-6"></div>
+        <!-- Entry Modal (Draggable/Swipeable) -->
+        <div id="entry-modal" class="fixed inset-0 z-50 hidden touch-none">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300" id="modal-backdrop" onclick="closeEntry()"></div>
+            <div class="absolute bottom-0 left-0 right-0 glass-panel rounded-t-[2.5rem] p-0 transform translate-y-full transition-transform duration-300 max-w-3xl mx-auto border-t border-white/20 shadow-2xl flex flex-col max-h-[90vh]" id="modal-content">
                 
-                <div class="mt-8 flex justify-center">
-                    <button onclick="submitEntry()" class="w-full sm:w-2/3 py-4 bg-white text-black rounded-xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:bg-gray-200 transition-all active:scale-95 text-lg">
-                        確認儲存
-                    </button>
+                <!-- Drag Handle & Header -->
+                <div class="w-full h-14 flex items-center justify-center relative flex-shrink-0 cursor-grab touch-pan-y" id="modal-drag-handle">
+                    <div class="w-12 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+                    <button onclick="closeEntry()" class="absolute right-6 top-4 text-gray-400 hover:text-white p-2"><i class="fa-solid fa-chevron-down"></i></button>
                 </div>
+
+                <div class="px-8 pb-8 overflow-y-auto flex-1 no-scrollbar">
+                    <h3 class="text-2xl font-black text-white mb-8 flex items-center justify-center gap-3 text-center" id="modal-title">
+                        <i class="fa-solid fa-pen-to-square"></i> 新增記錄
+                    </h3>
+                    <div id="modal-form-container" class="space-y-6"></div>
+                    <div class="mt-8 flex justify-center pb-8">
+                        <button onclick="submitEntry()" class="w-full sm:w-2/3 py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Numeric Keypad -->
+        <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-300 border-t border-white/20 pb-safe">
+            <div class="flex justify-between items-center px-4 py-2 bg-black/20 border-b border-white/5">
+                <span class="text-xs text-gray-400">輸入金額</span>
+                <button onclick="closeKeypad()" class="text-neon-blue font-bold px-4 py-2 text-sm">完成</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 p-3">
+                <button onclick="kpInput(1)" class="keypad-btn h-14">1</button>
+                <button onclick="kpInput(2)" class="keypad-btn h-14">2</button>
+                <button onclick="kpInput(3)" class="keypad-btn h-14">3</button>
+                <button onclick="kpInput(4)" class="keypad-btn h-14">4</button>
+                <button onclick="kpInput(5)" class="keypad-btn h-14">5</button>
+                <button onclick="kpInput(6)" class="keypad-btn h-14">6</button>
+                <button onclick="kpInput(7)" class="keypad-btn h-14">7</button>
+                <button onclick="kpInput(8)" class="keypad-btn h-14">8</button>
+                <button onclick="kpInput(9)" class="keypad-btn h-14">9</button>
+                <button onclick="kpInput('.')" class="keypad-btn h-14">.</button>
+                <button onclick="kpInput(0)" class="keypad-btn h-14">0</button>
+                <button onclick="kpDel()" class="keypad-btn h-14 text-red-400"><i class="fa-solid fa-delete-left"></i></button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // --- 設定 (User Config) ---
+        // --- 設定 ---
         const firebaseConfig = {
             apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI",
             authDomain: "hinesrc-25cee.firebaseapp.com",
@@ -353,6 +296,8 @@
         let chartInstance = null;
         let unsubscribe = null;
         let isLoginView = true;
+        let activeKeypadInput = null; // For custom keypad
+        let workInterval = null; // For clock
 
         // --- Initialization ---
         function init() {
@@ -366,14 +311,94 @@
                         currentUser = user;
                         showApp();
                         loadFirebaseData();
+                        checkAttendanceStatus();
                     } else if (!isGuest) {
                         showAuth();
                     }
                 });
+                startClock(); // Start the UI clock
             } catch (e) {
-                showToast("系統初始化失敗: " + e.message, "error");
+                showToast("系統初始化失敗", "error");
             }
         }
+
+        // --- Attendance System ---
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('clock-time').innerText = now.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
+                document.getElementById('clock-date').innerText = `${now.getMonth()+1}/${now.getDate()} ${now.toLocaleDateString('zh-HK', {weekday: 'long'})}`;
+            }, 1000);
+        }
+
+        function checkAttendanceStatus() {
+            if(isGuest) return;
+            // Check Firebase for active session
+            db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').onSnapshot(doc => {
+                const statusText = document.getElementById('work-status-text');
+                const btnIn = document.getElementById('btn-clock-in');
+                const btnOut = document.getElementById('btn-clock-out');
+                
+                if (doc.exists) {
+                    // Working
+                    const start = doc.data().startTime.toDate();
+                    statusText.innerText = `上班中 (${start.getHours()}:${String(start.getMinutes()).padStart(2,'0')} 開始)`;
+                    statusText.className = "text-neon-green text-xs mt-2 font-bold animate-pulse";
+                    btnIn.classList.add('hidden');
+                    btnOut.classList.remove('hidden');
+                } else {
+                    // Not working
+                    statusText.innerText = "準備就緒";
+                    statusText.className = "text-gray-500 text-xs mt-2 font-bold";
+                    btnIn.classList.remove('hidden');
+                    btnOut.classList.add('hidden');
+                }
+            });
+        }
+
+        async function startWork() {
+            if(isGuest) { showToast("訪客模式無法打卡", "info"); return; }
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').set({
+                    startTime: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("上班打卡成功", "success");
+            } catch(e) { showToast("打卡失敗", "error"); }
+        }
+
+        async function endWork() {
+            if(isGuest) return;
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('attendance').doc('current');
+                const doc = await docRef.get();
+                if(!doc.exists) return;
+
+                const start = doc.data().startTime.toDate();
+                const end = new Date();
+                const diffMs = end - start;
+                const diffMins = diffMs / 1000 / 60;
+                
+                // Logic: Pay per 30 mins block (ceil), rate $25 per block
+                const blocks = Math.ceil(diffMins / 30);
+                const pay = blocks * 25;
+                const hours = (blocks * 0.5).toFixed(1);
+
+                // Add Record
+                const recordData = {
+                    type: 'attendance',
+                    date: `${end.getMonth()+1}/${end.getDate()}`,
+                    amount: pay,
+                    note: `工時: ${hours}小時 (${Math.round(diffMins)}分)`,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('users').doc(currentUser.uid).collection('records').add(recordData);
+                await docRef.delete(); // Clear status
+                
+                showToast(`下班！薪資 $${pay} 已記錄`, "success");
+            } catch(e) { console.error(e); showToast("結算失敗", "error"); }
+        }
+
 
         // --- Custom UI: Toast & Confirm ---
         function showToast(msg, type = "info") {
@@ -383,11 +408,7 @@
             let icon = type === 'success' ? 'fa-check' : (type === 'error' ? 'fa-xmark' : 'fa-info');
             el.innerHTML = `<span><i class="fa-solid ${icon} mr-2"></i> ${msg}</span>`;
             container.appendChild(el);
-            setTimeout(() => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(-20px)';
-                setTimeout(() => el.remove(), 300);
-            }, 3000);
+            setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-20px)'; setTimeout(() => el.remove(), 300); }, 3000);
         }
 
         let confirmCallback = null;
@@ -397,111 +418,76 @@
             document.getElementById('confirm-msg').innerText = msg;
             confirmCallback = callback;
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                box.classList.remove('scale-95');
-                box.classList.add('scale-100');
-            }, 10);
+            setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
         }
-
         function closeConfirm(result) {
             const modal = document.getElementById('custom-confirm');
             const box = document.getElementById('confirm-box');
-            box.classList.remove('scale-100');
-            box.classList.add('scale-95');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                if (result && confirmCallback) confirmCallback();
-                confirmCallback = null;
-            }, 300);
+            box.classList.remove('scale-100'); box.classList.add('scale-95'); modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); if (result && confirmCallback) confirmCallback(); confirmCallback = null; }, 300);
         }
         document.getElementById('confirm-yes-btn').onclick = () => closeConfirm(true);
 
-        // --- Auth Logic ---
-        function showAuth() {
-            document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('opacity-100');
+        // --- Custom Keypad Logic ---
+        function openKeypad(inputId) {
+            activeKeypadInput = document.getElementById(inputId);
+            const kp = document.getElementById('custom-keypad');
+            kp.classList.remove('translate-y-full');
+            // Add padding to body to prevent hiding behind keypad? No, overlay is fine for modal.
+        }
+        function closeKeypad() {
+            document.getElementById('custom-keypad').classList.add('translate-y-full');
+            activeKeypadInput = null;
+        }
+        function kpInput(val) {
+            if(!activeKeypadInput) return;
+            activeKeypadInput.value += val;
+            // Trigger input event for any listeners
+            activeKeypadInput.dispatchEvent(new Event('input'));
+        }
+        function kpDel() {
+            if(!activeKeypadInput) return;
+            activeKeypadInput.value = activeKeypadInput.value.slice(0, -1);
         }
 
+        // --- Auth Logic ---
+        function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
         function showApp() {
             const name = currentUser.displayName || currentUser.email.split('@')[0];
             const avatar = currentUser.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.uid}`;
             document.getElementById('user-name').innerText = name;
             document.getElementById('user-avatar').src = avatar;
-
             document.getElementById('auth-screen').classList.add('hidden');
-            const appContainer = document.getElementById('app-container');
-            appContainer.classList.remove('hidden');
-            
-            if (isGuest) {
-                document.getElementById('guest-banner').classList.remove('hidden');
-                showToast("歡迎進入訪客模式", "info");
-            } else {
-                document.getElementById('guest-banner').classList.add('hidden');
-                showToast(`歡迎回來, ${name}`, "success");
-            }
-            setTimeout(() => appContainer.classList.add('opacity-100'), 100);
+            const appC = document.getElementById('app-container');
+            appC.classList.remove('hidden');
+            if(isGuest) document.getElementById('guest-banner').classList.remove('hidden'); else document.getElementById('guest-banner').classList.add('hidden');
+            setTimeout(() => appC.classList.add('opacity-100'), 100);
             renderView();
         }
-
         function toggleMode() {
             isLoginView = !isLoginView;
             const btn = document.getElementById('login-btn');
             const toggleText = document.querySelector('#auth-screen span[onclick="toggleMode()"]');
-            
-            if (isLoginView) {
-                btn.innerText = "進入系統";
-                toggleText.innerHTML = '還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>';
-            } else {
-                btn.innerText = "立即註冊";
-                toggleText.innerHTML = '已有帳號？ <span class="text-neon-purple font-bold border-b border-neon-purple/50 pb-0.5">點此登入</span>';
-            }
+            if (isLoginView) { btn.innerText = "進入系統"; toggleText.innerHTML = '還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>'; } 
+            else { btn.innerText = "立即註冊"; toggleText.innerHTML = '已有帳號？ <span class="text-neon-purple font-bold border-b border-neon-purple/50 pb-0.5">點此登入</span>'; }
         }
-
         function handleLogin() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             if(!email || !pass) return showToast("請輸入完整資訊", "error");
-
-            if (isLoginView) {
-                auth.signInWithEmailAndPassword(email, pass).catch(e => showToast(mapError(e.code), "error"));
-            } else {
-                auth.createUserWithEmailAndPassword(email, pass)
-                    .then(() => showToast("註冊成功！", "success"))
-                    .catch(e => showToast(mapError(e.code), "error"));
-            }
+            if (isLoginView) auth.signInWithEmailAndPassword(email, pass).catch(e => showToast(e.message, "error"));
+            else auth.createUserWithEmailAndPassword(email, pass).then(() => showToast("註冊成功！", "success")).catch(e => showToast(e.message, "error"));
         }
-
-        function handleGoogleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(e => showToast("Google 登入失敗", "error"));
-        }
-
+        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => showToast("Google 登入失敗", "error")); }
         function handleGuest() {
-            isGuest = true;
-            currentUser = { uid: 'guest', displayName: '訪客', email: 'guest@temp.com' };
-            records = [
-                {id: '1', type: 'camel', upper: 100, lower: 150, date: '10/24', createdAt: {seconds: Date.now()/1000}},
-                {id: '2', type: 'expense', amount: 50, name: '測試', source: '淘寶', date: '10/24', createdAt: {seconds: Date.now()/1000}}
-            ];
+            isGuest = true; currentUser = { uid: 'guest', displayName: '訪客', email: 'guest@temp.com' };
+            records = [{id: '1', type: 'camel', upper: 100, lower: 150, date: '10/24', createdAt: {seconds: Date.now()/1000}}];
             showApp();
         }
-
         function handleLogout() {
             showConfirm("確定要登出系統嗎？", () => {
-                if (isGuest) {
-                    isGuest = false; records = []; currentUser = null; showAuth();
-                } else {
-                    if (unsubscribe) unsubscribe(); auth.signOut();
-                }
+                if (isGuest) { isGuest = false; records = []; currentUser = null; showAuth(); } else { if (unsubscribe) unsubscribe(); auth.signOut(); }
             });
-        }
-
-        function mapError(code) {
-            const map = { 'auth/user-not-found': '找不到此帳號', 'auth/wrong-password': '密碼錯誤', 'auth/email-already-in-use': '此 Email 已被註冊', 'auth/weak-password': '密碼太弱', 'auth/invalid-email': 'Email 格式錯誤' };
-            return map[code] || "發生錯誤";
         }
 
         // --- Data Logic ---
@@ -518,25 +504,23 @@
         // --- Render Logic ---
         function switchView(view) {
             currentFilter = view;
-            document.querySelectorAll('.nav-item').forEach(el => { 
-                el.classList.remove('text-neon-blue', 'active'); 
-                el.classList.add('text-gray-500'); 
-                // Icon Animation Reset
-                const icon = el.querySelector('i');
-                if(icon) {
-                    icon.classList.remove('text-neon-blue', '-translate-y-1');
-                }
-            });
+            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('text-neon-blue', 'active'); el.classList.add('text-gray-500'); });
             const activeNav = document.getElementById(`nav-${view}`);
-            if (activeNav) { 
-                activeNav.classList.remove('text-gray-500'); 
-                activeNav.classList.add('text-neon-blue', 'active');
-                const icon = activeNav.querySelector('i');
-                if(icon) {
-                    icon.classList.add('text-neon-blue', '-translate-y-1');
-                }
+            if (activeNav) { activeNav.classList.remove('text-gray-500'); activeNav.classList.add('text-neon-blue', 'active'); }
+            
+            // Handle Views
+            if(view === 'attendance') {
+                document.getElementById('main-views').classList.add('hidden');
+                document.getElementById('attendance-view').classList.remove('hidden');
+                document.getElementById('fab-container').classList.add('hidden');
+                document.getElementById('dashboard-card').classList.add('hidden');
+            } else {
+                document.getElementById('main-views').classList.remove('hidden');
+                document.getElementById('attendance-view').classList.add('hidden');
+                document.getElementById('fab-container').classList.remove('hidden');
+                document.getElementById('dashboard-card').classList.remove('hidden');
+                renderView();
             }
-            renderView();
         }
 
         function renderView() {
@@ -546,21 +530,17 @@
             const backBtn = document.getElementById('back-btn');
             let filtered = [];
             
-            let income = 0, expense = 0, sources = { camel: 0, reels: 0, kwuntong: 0 };
+            let income = 0, expense = 0, sources = { camel: 0, reels: 0, kwuntong: 0, attendance: 0 };
             records.forEach(r => {
                 if(r.type === 'expense') expense += Number(r.amount);
                 else {
                     let val = 0;
                     if(r.type === 'camel') val = Number(r.upper) + Number(r.lower);
                     if(r.type === 'reels') val = Number(r.income);
-                    if(r.type === 'kwuntong') {
-                        // 扣除退款 (Kwun Tong: Lower - Refund)
-                        let kwLower = Number(r.lower || 0);
-                        let kwRefund = Number(r.refund || 0);
-                        val = kwLower - kwRefund; 
-                    }
+                    if(r.type === 'kwuntong') val = Number(r.lower) - Number(r.refund || 0);
+                    if(r.type === 'attendance') val = Number(r.amount);
                     income += val;
-                    sources[r.type] += val;
+                    if(sources[r.type] !== undefined) sources[r.type] += val;
                 }
             });
 
@@ -572,22 +552,18 @@
             document.getElementById('profit-bar').style.width = `${Math.max(0, margin)}%`;
 
             if (currentFilter === 'dashboard') {
-                filtered = records.slice(0, 5); 
-                title.innerText = "最新動態";
-                chartC.classList.remove('hidden');
-                backBtn.classList.add('hidden');
+                filtered = records.slice(0, 5); title.innerText = "最新動態"; chartC.classList.remove('hidden'); backBtn.classList.add('hidden');
                 renderChart(sources.camel, sources.reels, sources.kwuntong);
             } else {
                 title.innerText = getTitle(currentFilter);
                 filtered = currentFilter === 'income' ? records.filter(r => r.type !== 'expense') : records.filter(r => r.type === currentFilter);
-                chartC.classList.add('hidden');
-                backBtn.classList.remove('hidden');
+                chartC.classList.add('hidden'); backBtn.classList.remove('hidden');
             }
             listContainer.innerHTML = filtered.length ? filtered.map(renderItem).join('') : `<div class="text-center py-12 text-gray-600"><i class="fa-solid fa-wind text-4xl mb-2"></i><p>暫無記錄</p></div>`;
         }
 
         function getTitle(type) {
-            const map = { 'camel': '駱駝漆記錄', 'reels': 'Reels 宣傳', 'kwuntong': '觀塘記錄', 'expense': '支出細項', 'income': '所有收入' };
+            const map = { 'camel': '駱駝漆記錄', 'reels': 'Reels 宣傳', 'kwuntong': '觀塘記錄', 'expense': '支出細項', 'income': '所有收入', 'attendance': '打卡記錄' };
             return map[type] || '列表';
         }
 
@@ -596,175 +572,95 @@
             const date = r.date || 'N/A';
             if (r.type === 'camel') {
                 icon = 'fa-building'; color = 'text-neon-blue'; title = '駱駝漆';
-                const total = Number(r.upper) + Number(r.lower);
-                desc = `上:${r.upper} 下:${r.lower}`; money = `+$${total}`;
+                const total = Number(r.upper) + Number(r.lower); desc = `上:${r.upper} 下:${r.lower}`; money = `+$${total}`;
             } else if (r.type === 'reels') {
-                icon = 'fa-instagram'; color = 'text-neon-purple'; title = r.content || 'Reels';
-                desc = '影片宣傳'; money = `+$${r.income}`;
+                icon = 'fa-instagram'; color = 'text-neon-purple'; title = r.content || 'Reels'; desc = '影片宣傳'; money = `+$${r.income}`;
             } else if (r.type === 'kwuntong') {
                 icon = 'fa-shop'; color = 'text-orange-500'; title = '觀塘廣場';
                 let refTxt = r.refund > 0 ? ` <span class="text-red-400 font-bold">(退: $${r.refund})</span>` : '';
-                desc = (r.received ? '已收到退款' : '未收到退款') + refTxt; 
-                money = `+$${r.lower}`;
+                desc = (r.received ? '已收到退款' : '未收到退款') + refTxt; money = `+$${r.lower}`;
+            } else if (r.type === 'attendance') {
+                icon = 'fa-clock'; color = 'text-neon-green'; title = '薪資收入'; desc = r.note || '打卡記錄'; money = `+$${r.amount}`;
             } else {
-                icon = 'fa-cart-shopping'; color = 'text-neon-pink'; title = r.name;
-                desc = r.source; money = `-$${r.amount}`;
+                icon = 'fa-cart-shopping'; color = 'text-neon-pink'; title = r.name; desc = r.source; money = `-$${r.amount}`;
             }
             return `<div class="glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-colors border border-white/5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center ${color} bg-black/40"><i class="fa-brands ${icon} fa-solid"></i></div><div><h4 class="text-sm font-bold text-gray-200">${title}</h4><p class="text-[10px] text-gray-500">${date} · ${desc}</p></div></div><div class="flex items-center gap-3"><span class="font-bold font-mono ${r.type === 'expense' ? 'text-neon-pink' : 'text-neon-green'}">${money}</span><button onclick="deleteEntry('${r.id}')" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors rounded-full hover:bg-white/10"><i class="fa-solid fa-trash text-xs"></i></button></div></div>`;
         }
 
         function deleteEntry(id) {
             showConfirm("刪除後無法復原，確定嗎？", async () => {
-                if (isGuest) {
-                    records = records.filter(r => r.id !== id);
-                    renderView();
-                    showToast("已從暫存刪除", "success");
-                } else {
-                    await db.collection('users').doc(currentUser.uid).collection('records').doc(id).delete();
-                    showToast("刪除成功", "success");
-                }
+                if (isGuest) { records = records.filter(r => r.id !== id); renderView(); showToast("已刪除", "success"); } 
+                else { await db.collection('users').doc(currentUser.uid).collection('records').doc(id).delete(); showToast("刪除成功", "success"); }
             });
         }
 
         function renderChart(c, r, k) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            Chart.defaults.color = '#6b7280';
-            Chart.defaults.borderColor = 'transparent';
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['駱駝漆', 'Reels', '觀塘'],
-                    datasets: [{ data: [c, r, k], backgroundColor: ['#00f3ff', '#bc13fe', '#f97316'], borderWidth: 0, hoverOffset: 10 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, color: 'white', font: { family: '"Noto Sans TC"' } } } }
-                }
-            });
+            Chart.defaults.color = '#6b7280'; Chart.defaults.borderColor = 'transparent';
+            chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['駱駝漆', 'Reels', '觀塘'], datasets: [{ data: [c, r, k], backgroundColor: ['#00f3ff', '#bc13fe', '#f97316'], borderWidth: 0, hoverOffset: 10 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, color: 'white', font: { family: '"Noto Sans TC"' } } } } } });
         }
 
-        // --- Data Entry UI (Beautified) ---
+        // --- Data Entry UI ---
         let activeType = '';
         function toggleFab() {
-            const menu = document.getElementById('fab-menu');
-            const icon = document.getElementById('fab-icon');
-            if(menu.classList.contains('scale-0')) {
-                menu.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
-                icon.style.transform = 'rotate(45deg)';
-            } else {
-                menu.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
-                icon.style.transform = 'rotate(0deg)';
-            }
+            const menu = document.getElementById('fab-menu'); const icon = document.getElementById('fab-icon');
+            if(menu.classList.contains('scale-0')) { menu.classList.remove('scale-0', 'opacity-0', 'pointer-events-none'); icon.style.transform = 'rotate(45deg)'; } 
+            else { menu.classList.add('scale-0', 'opacity-0', 'pointer-events-none'); icon.style.transform = 'rotate(0deg)'; }
         }
 
         function openEntry(type, displayTitle) {
-            toggleFab();
-            activeType = type;
-            const modal = document.getElementById('entry-modal');
-            const content = document.getElementById('modal-content');
-            const formContainer = document.getElementById('modal-form-container');
-            const modalTitle = document.getElementById('modal-title');
-            
-            // Set dynamic title
+            toggleFab(); activeType = type;
+            const modal = document.getElementById('entry-modal'); const content = document.getElementById('modal-content'); const formContainer = document.getElementById('modal-form-container'); const modalTitle = document.getElementById('modal-title');
             modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${displayTitle}`;
-
-            const today = `${new Date().getMonth()+1}/${new Date().getDate()}`;
             
-            // Generate Form HTML with Better Layout
-            let html = `
-                <div class="grid grid-cols-1 gap-5">
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label>
-                        <input id="in-date" type="text" value="${today}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors">
-                    </div>
-            `;
+            // Format today for date input (YYYY-MM-DD)
+            const dateObj = new Date();
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+
+            let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${todayStr}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors"></div>`;
             
             if (type === 'camel') {
-                html += `
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">上層收入</label>
-                            <input id="in-upper" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
-                        </div>
-                        <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label>
-                            <input id="in-lower" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
-                        </div>
-                    </div>
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label>
-                        <input id="in-note" type="text" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
-                    </div>
-                `;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">上層收入</label><input id="in-upper" type="number" readonly onclick="openKeypad('in-upper')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label><input id="in-lower" type="number" readonly onclick="openKeypad('in-lower')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label><input id="in-note" type="text" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue"></div>`;
             } else if (type === 'reels') {
-                html += `
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">收入金額</label>
-                        <input id="in-income" type="number" value="25" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple">
-                    </div>
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">影片內容</label>
-                        <input id="in-content" type="text" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple">
-                    </div>
-                `;
+                html += `<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">收入金額</label><input id="in-income" type="number" value="25" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">影片內容</label><input id="in-content" type="text" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple"></div>`;
             } else if (type === 'kwuntong') {
-                html += `
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label>
-                            <input id="in-lower" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500">
-                        </div>
-                        <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400 rounded">退款金額</label>
-                            <input id="in-refund" type="number" placeholder="如有" class="glass-input w-full p-4 rounded-xl text-sm focus:border-red-500 text-red-300">
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-center p-4 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onclick="document.getElementById('in-received').click()">
-                        <input id="in-received" type="checkbox" class="w-5 h-5 rounded accent-orange-500 mr-3 custom-checkbox cursor-pointer">
-                        <span class="text-sm font-bold text-gray-300">已確認收到退款</span>
-                    </div>
-                `;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label><input id="in-lower" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400 rounded">退款金額</label><input id="in-refund" type="number" placeholder="如有" class="glass-input w-full p-4 rounded-xl text-sm focus:border-red-500 text-red-300"></div></div><div class="flex items-center justify-center p-4 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onclick="document.getElementById('in-received').click()"><input id="in-received" type="checkbox" class="w-5 h-5 rounded accent-orange-500 mr-3 custom-checkbox cursor-pointer"><span class="text-sm font-bold text-gray-300">已確認收到退款</span></div>`;
             } else if (type === 'expense') {
-                html += `
-                    <div class="grid grid-cols-2 gap-4">
-                         <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">金額</label>
-                            <input id="in-amount" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink">
-                        </div>
-                        <div class="relative group">
-                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">項目名稱</label>
-                            <input id="in-name" type="text" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink">
-                        </div>
-                    </div>
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">來源</label>
-                        <input id="in-source" type="text" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3">
-                        <div class="flex justify-center gap-3">
-                            <button onclick="setSrc('淘寶')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">淘寶</button>
-                            <button onclick="setSrc('拼多多')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">拼多多</button>
-                            <button onclick="setSrc('Carousell')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">Carousell</button>
-                        </div>
-                    </div>
-                `;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">金額</label><input id="in-amount" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">項目名稱</label><input id="in-name" type="text" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">來源</label><input id="in-source" type="text" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3"><div class="flex justify-center gap-3"><button onclick="setSrc('淘寶')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">淘寶</button><button onclick="setSrc('拼多多')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">拼多多</button><button onclick="setSrc('Carousell')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">Carousell</button></div></div>`;
             }
-            html += `</div>`; // Close grid
-
-            formContainer.innerHTML = html;
-            modal.classList.remove('hidden');
-            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+            html += `</div>`;
+            formContainer.innerHTML = html; modal.classList.remove('hidden'); setTimeout(() => content.classList.remove('translate-y-full'), 10);
         }
 
-        function closeEntry() {
-            document.getElementById('modal-content').classList.add('translate-y-full');
-            setTimeout(() => document.getElementById('entry-modal').classList.add('hidden'), 300);
-        }
-
+        function closeEntry() { document.getElementById('modal-content').classList.add('translate-y-full'); setTimeout(() => document.getElementById('entry-modal').classList.add('hidden'), 300); closeKeypad(); }
         function setSrc(val) { document.getElementById('in-source').value = val; }
 
+        // Swipe Down Logic
+        let touchstartY = 0;
+        const modalContent = document.getElementById('modal-content');
+        const dragHandle = document.getElementById('modal-drag-handle');
+        dragHandle.addEventListener('touchstart', e => touchstartY = e.changedTouches[0].screenY);
+        dragHandle.addEventListener('touchmove', e => {
+            const dist = e.changedTouches[0].screenY - touchstartY;
+            if(dist > 0) modalContent.style.transform = `translateY(${dist}px)`;
+        });
+        dragHandle.addEventListener('touchend', e => {
+            const dist = e.changedTouches[0].screenY - touchstartY;
+            modalContent.style.transform = '';
+            if(dist > 100) closeEntry(); else modalContent.classList.remove('translate-y-full');
+        });
+
         async function submitEntry() {
-            const date = document.getElementById('in-date').value;
-            let data = { type: activeType, date, createdAt: isGuest ? {seconds: Date.now()/1000} : firebase.firestore.FieldValue.serverTimestamp() };
+            const dateVal = document.getElementById('in-date').value;
+            // Format date for display (Month/Day)
+            const dateObj = new Date(dateVal);
+            const displayDate = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
+
+            let data = { type: activeType, date: displayDate, createdAt: isGuest ? {seconds: Date.now()/1000} : firebase.firestore.FieldValue.serverTimestamp() };
             
             if(activeType === 'camel') {
                 data.upper = document.getElementById('in-upper').value || 0;
@@ -775,7 +671,7 @@
                 data.content = document.getElementById('in-content').value;
             } else if(activeType === 'kwuntong') {
                 data.lower = document.getElementById('in-lower').value || 0;
-                data.refund = document.getElementById('in-refund').value || 0; // Capture refund
+                data.refund = document.getElementById('in-refund').value || 0;
                 data.received = document.getElementById('in-received').checked;
             } else if(activeType === 'expense') {
                 data.amount = document.getElementById('in-amount').value || 0;
@@ -784,15 +680,11 @@
             }
 
             if(isGuest) {
-                data.id = 'guest_' + Date.now();
-                records.unshift(data);
-                showToast("訪客資料已暫存", "success");
+                data.id = 'guest_' + Date.now(); records.unshift(data); showToast("訪客資料已暫存", "success");
             } else {
-                await db.collection('users').doc(currentUser.uid).collection('records').add(data);
-                showToast("資料已雲端同步", "success");
+                await db.collection('users').doc(currentUser.uid).collection('records').add(data); showToast("資料已雲端同步", "success");
             }
-            closeEntry();
-            if(isGuest) renderView();
+            closeEntry(); if(isGuest) renderView();
         }
 
         // Start
@@ -801,5 +693,4 @@
     </script>
 </body>
 </html>
-
 
