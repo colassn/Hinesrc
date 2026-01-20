@@ -1,1 +1,785 @@
-。
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>騫記錄專用網站</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Google Fonts: Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Noto Sans TC"', 'sans-serif']
+                    },
+                    colors: {
+                        neon: { blue: '#00f3ff', purple: '#bc13fe', pink: '#ff0055', green: '#0aff00' },
+                        glass: { 100: 'rgba(255, 255, 255, 0.05)', 200: 'rgba(255, 255, 255, 0.1)' },
+                        dark: { bg: '#050511' }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'blob': 'blob 7s infinite',
+                        'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-up-modal': 'slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        blob: { 
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        slideDown: { from: { transform: 'translateY(-100%)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
+                        slideUpModal: { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #050511; color: #ffffff;
+            font-family: "Noto Sans TC", sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #050511;
+            overflow: hidden;
+        }
+        .bg-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            animation: blob 10s infinite;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 20, 40, 0.75); /* Slightly darker for better contrast */
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+        .glass-input {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; transition: all 0.3s;
+        }
+        .glass-input:focus { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.15); outline: none; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
+        .toast-msg { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; border-left: 4px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; animation: slideDown 0.3s ease-out; }
+        .toast-success { border-color: #0aff00; }
+        .toast-error { border-color: #ff0055; }
+        .toast-info { border-color: #00f3ff; }
+
+        /* Custom Checkbox */
+        .custom-checkbox:checked {
+            background-color: #00f3ff;
+            border-color: #00f3ff;
+        }
+    </style>
+</head>
+<body class="text-white pb-24">
+
+    <!-- 背景動畫 -->
+    <div class="bg-animation">
+        <div class="bg-blob bg-neon-purple w-96 h-96 top-0 -left-20"></div>
+        <div class="bg-blob bg-neon-blue w-96 h-96 bottom-0 -right-20 animation-delay-2000"></div>
+        <div class="bg-blob bg-neon-pink w-64 h-64 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animation-delay-4000"></div>
+    </div>
+
+    <!-- 客製化通知容器 (Toast) -->
+    <div id="toast-container"></div>
+
+    <!-- 客製化確認視窗 (Custom Confirm) -->
+    <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-6 transform scale-95 transition-transform duration-300" id="confirm-box">
+            <div class="w-12 h-12 rounded-full bg-neon-pink/20 flex items-center justify-center text-neon-pink mb-4 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-center mb-2">確認操作</h3>
+            <p class="text-gray-400 text-center text-sm mb-6" id="confirm-msg">您確定要執行此操作嗎？</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm(false)" class="flex-1 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium transition-colors">取消</button>
+                <button id="confirm-yes-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-neon-pink to-red-600 text-white font-bold shadow-lg shadow-red-900/50 hover:opacity-90 transition-opacity">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登入畫面 (Auth Screen) -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="glass-panel w-full max-w-md p-8 sm:p-10 rounded-[2.5rem] border-t border-white/20 relative overflow-hidden animate-slide-up-modal">
+            <!-- 裝飾光暈 -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink"></div>
+            
+            <div class="text-center mb-10">
+                <div class="w-24 h-24 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-neon-blue/20 mb-5 animate-float">
+                    <i class="fa-solid fa-robot text-5xl text-white"></i>
+                </div>
+                <!-- 標題更新 -->
+                <h1 class="text-3xl font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-1">騫記錄專用網站</h1>
+                <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.1</p>
+            </div>
+
+            <!-- Email Form -->
+            <div id="login-form" class="space-y-5">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors text-lg"></i>
+                    </div>
+                    <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500">
+                </div>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors text-lg"></i>
+                    </div>
+                    <input type="password" id="password" placeholder="密碼" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500">
+                </div>
+                
+                <button onclick="handleLogin()" id="login-btn" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple rounded-xl font-bold text-white text-lg shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:shadow-[0_0_30px_rgba(188,19,254,0.5)] transition-all active:scale-95">
+                    進入系統
+                </button>
+            </div>
+
+            <!-- 註冊切換 (置中，更寬鬆的間距) -->
+            <div class="mt-6 text-center">
+                <span onclick="toggleMode()" class="cursor-pointer text-sm text-gray-400 hover:text-white transition-colors py-2 px-4 rounded-lg hover:bg-white/5 select-none">
+                    還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>
+                </span>
+            </div>
+            
+            <!-- 分隔線 -->
+            <div class="my-8 flex items-center gap-4">
+                <div class="h-px bg-white/10 flex-1"></div>
+                <span class="text-xs text-gray-500 font-medium">快速登入</span>
+                <div class="h-px bg-white/10 flex-1"></div>
+            </div>
+            
+            <div class="space-y-4">
+                 <button onclick="handleGoogleLogin()" class="w-full py-3.5 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors active:scale-95 text-sm">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
+                    Google 帳戶登入
+                </button>
+
+                <button onclick="handleGuest()" class="w-full py-3.5 border border-white/20 text-gray-300 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-white/5 hover:text-neon-green hover:border-neon-green/30 transition-all active:scale-95 text-sm group">
+                    <i class="fa-solid fa-user-secret group-hover:text-neon-green transition-colors"></i>
+                    訪客模式試用
+                </button>
+            </div>
+        </div>
+        <p class="text-[10px] text-gray-600 mt-8 font-medium tracking-wider uppercase opacity-50">Secure System V3.1</p>
+    </div>
+
+    <!-- 主程式介面 (Main App) -->
+    <div id="app-container" class="hidden opacity-0 transition-opacity duration-700">
+        
+        <!-- 訪客提示條 -->
+        <div id="guest-banner" class="hidden bg-gradient-to-r from-neon-green/20 to-transparent border-b border-neon-green/30 text-neon-green px-4 py-2 text-xs font-bold flex items-center justify-center">
+            <i class="fa-solid fa-eye mr-2"></i> 訪客模式：資料僅存於記憶體，離開即消失
+        </div>
+
+        <!-- Header -->
+        <header class="pt-6 px-6 pb-2">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-lg shadow-purple-500/20">
+                        <img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover">
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.1 System</p>
+                        <h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-md">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+
+            <!-- Dashboard Card -->
+            <div id="dashboard-card" class="glass-panel rounded-[2rem] p-6 relative overflow-hidden group border border-white/10">
+                <div class="absolute -right-12 -top-12 w-48 h-48 bg-neon-blue/20 blur-3xl rounded-full group-hover:bg-neon-purple/20 transition-colors duration-500"></div>
+                
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-gray-400 text-xs font-medium mb-1"><i class="fa-solid fa-coins text-neon-blue mr-1"></i> 本月淨利潤</p>
+                        <h1 class="text-4xl font-black text-white tracking-tight" id="net-profit">$0</h1>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white border border-white/5" id="profit-margin">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-4">
+                    <div id="profit-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-purple w-0 transition-all duration-1000"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="px-4 pb-28 relative z-10 max-w-2xl mx-auto mt-4">
+            
+            <!-- Quick Stats Row -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div onclick="switchView('income')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-green/50 transition-all active:scale-95">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#0aff00]"></div>
+                        <p class="text-xs text-gray-400 font-bold">總收入</p>
+                    </div>
+                    <p class="text-lg font-bold text-white tracking-wide" id="total-income">$0</p>
+                </div>
+                <div onclick="switchView('expense')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-pink/50 transition-all active:scale-95">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-neon-pink shadow-[0_0_8px_#ff0055]"></div>
+                        <p class="text-xs text-gray-400 font-bold">總支出</p>
+                    </div>
+                    <p class="text-lg font-bold text-white tracking-wide" id="total-expense">$0</p>
+                </div>
+            </div>
+
+            <!-- List Container -->
+            <div id="list-view" class="space-y-4">
+                <div class="flex items-center justify-between px-2 mb-2">
+                    <h3 class="text-sm font-bold text-gray-300 tracking-wide" id="list-title">最新動態</h3>
+                    <button onclick="switchView('dashboard')" id="back-btn" class="hidden text-xs text-neon-blue hover:text-white transition-colors bg-neon-blue/10 px-3 py-1 rounded-full">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> 返回
+                    </button>
+                </div>
+                
+                <!-- Chart Area (Only visible in dashboard) -->
+                <div id="chart-container" class="glass-panel p-4 rounded-3xl mb-4 h-48 relative border border-white/5">
+                    <canvas id="mainChart"></canvas>
+                </div>
+
+                <!-- Dynamic List -->
+                <div id="dynamic-list" class="space-y-3 pb-20 min-h-[200px]">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button (FAB) -->
+        <div class="fixed bottom-24 right-6 z-40">
+            <button onclick="toggleFab()" id="fab-main" class="w-14 h-14 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-[0_0_20px_rgba(0,243,255,0.4)] flex items-center justify-center text-2xl transition-transform duration-300 active:scale-90 z-50 relative border-2 border-white/20">
+                <i class="fa-solid fa-plus transition-transform duration-300" id="fab-icon"></i>
+            </button>
+            
+            <div id="fab-menu" class="absolute bottom-16 right-0 flex flex-col items-end gap-3 transition-all duration-300 transform scale-0 opacity-0 origin-bottom-right pointer-events-none">
+                <button onclick="openEntry('camel', '新增駱駝漆記錄')" class="flex items-center gap-3 group pointer-events-auto"><span class="bg-black/80 text-white text-xs px-2 py-1 rounded backdrop-blur border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">駱駝漆</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-blue text-neon-blue flex items-center justify-center hover:bg-neon-blue hover:text-black transition-all shadow-lg shadow-neon-blue/20"><i class="fa-solid fa-building"></i></div></button>
+                <button onclick="openEntry('reels', '新增 Reels 宣傳')" class="flex items-center gap-3 group pointer-events-auto"><span class="bg-black/80 text-white text-xs px-2 py-1 rounded backdrop-blur border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">Reels</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-purple text-neon-purple flex items-center justify-center hover:bg-neon-purple hover:text-black transition-all shadow-lg shadow-neon-purple/20"><i class="fa-brands fa-instagram"></i></div></button>
+                <button onclick="openEntry('kwuntong', '新增觀塘廣場記錄')" class="flex items-center gap-3 group pointer-events-auto"><span class="bg-black/80 text-white text-xs px-2 py-1 rounded backdrop-blur border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">觀塘</span><div class="w-10 h-10 rounded-full glass-panel border border-orange-500 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-black transition-all shadow-lg shadow-orange-500/20"><i class="fa-solid fa-shop"></i></div></button>
+                <button onclick="openEntry('expense', '新增支出項目')" class="flex items-center gap-3 group pointer-events-auto"><span class="bg-black/80 text-white text-xs px-2 py-1 rounded backdrop-blur border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">支出</span><div class="w-10 h-10 rounded-full glass-panel border border-neon-pink text-neon-pink flex items-center justify-center hover:bg-neon-pink hover:text-white transition-all shadow-lg shadow-neon-pink/20"><i class="fa-solid fa-cart-shopping"></i></div></button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="fixed bottom-0 w-full glass-panel h-20 z-30 rounded-t-[2rem] border-t border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+            <div class="flex justify-around items-center h-full max-w-2xl mx-auto px-4 pb-2">
+                <button onclick="switchView('dashboard')" class="nav-item active flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-dashboard"><i class="fa-solid fa-chart-line text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">概覽</span></button>
+                <button onclick="switchView('camel')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-camel"><i class="fa-solid fa-building text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
+                <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">Reels</span></button>
+                <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">觀塘</span></button>
+                <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-all" id="nav-expense"><i class="fa-solid fa-file-invoice-dollar text-lg mb-1 transform transition-transform duration-300"></i><span class="text-[10px] font-bold">支出</span></button>
+            </div>
+        </div>
+
+        <!-- Data Entry Modal -->
+        <div id="entry-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeEntry()"></div>
+            <!-- 調整最大寬度與內邊距 -->
+            <div class="absolute bottom-0 left-0 right-0 glass-panel rounded-t-[2.5rem] p-6 sm:p-8 transform translate-y-full transition-transform duration-300 max-w-3xl mx-auto border-t border-white/20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" id="modal-content">
+                <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-6 opacity-50"></div>
+                <!-- 標題置中顯示 -->
+                <h3 class="text-2xl font-black text-white mb-8 flex items-center justify-center gap-3 text-center" id="modal-title">
+                    <i class="fa-solid fa-pen-to-square"></i> 新增記錄
+                </h3>
+                <div id="modal-form-container" class="space-y-6"></div>
+                
+                <div class="mt-8 flex justify-center">
+                    <button onclick="submitEntry()" class="w-full sm:w-2/3 py-4 bg-white text-black rounded-xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:bg-gray-200 transition-all active:scale-95 text-lg">
+                        確認儲存
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 設定 (User Config) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI",
+            authDomain: "hinesrc-25cee.firebaseapp.com",
+            projectId: "hinesrc-25cee",
+            storageBucket: "hinesrc-25cee.firebasestorage.app",
+            messagingSenderId: "873846921584",
+            appId: "1:873846921584:web:079586988dee370cc957b5",
+            measurementId: "G-TQRKF54G4F"
+        };
+
+        // --- Core Variables ---
+        let app, auth, db;
+        let currentUser = null;
+        let records = [];
+        let isGuest = false;
+        let currentFilter = 'dashboard';
+        let chartInstance = null;
+        let unsubscribe = null;
+        let isLoginView = true;
+
+        // --- Initialization ---
+        function init() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                auth.onAuthStateChanged(user => {
+                    if (user && !isGuest) {
+                        currentUser = user;
+                        showApp();
+                        loadFirebaseData();
+                    } else if (!isGuest) {
+                        showAuth();
+                    }
+                });
+            } catch (e) {
+                showToast("系統初始化失敗: " + e.message, "error");
+            }
+        }
+
+        // --- Custom UI: Toast & Confirm ---
+        function showToast(msg, type = "info") {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast-msg toast-${type}`;
+            let icon = type === 'success' ? 'fa-check' : (type === 'error' ? 'fa-xmark' : 'fa-info');
+            el.innerHTML = `<span><i class="fa-solid ${icon} mr-2"></i> ${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-20px)';
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        let confirmCallback = null;
+        function showConfirm(msg, callback) {
+            const modal = document.getElementById('custom-confirm');
+            const box = document.getElementById('confirm-box');
+            document.getElementById('confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeConfirm(result) {
+            const modal = document.getElementById('custom-confirm');
+            const box = document.getElementById('confirm-box');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (result && confirmCallback) confirmCallback();
+                confirmCallback = null;
+            }, 300);
+        }
+        document.getElementById('confirm-yes-btn').onclick = () => closeConfirm(true);
+
+        // --- Auth Logic ---
+        function showAuth() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('opacity-100');
+        }
+
+        function showApp() {
+            const name = currentUser.displayName || currentUser.email.split('@')[0];
+            const avatar = currentUser.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.uid}`;
+            document.getElementById('user-name').innerText = name;
+            document.getElementById('user-avatar').src = avatar;
+
+            document.getElementById('auth-screen').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('hidden');
+            
+            if (isGuest) {
+                document.getElementById('guest-banner').classList.remove('hidden');
+                showToast("歡迎進入訪客模式", "info");
+            } else {
+                document.getElementById('guest-banner').classList.add('hidden');
+                showToast(`歡迎回來, ${name}`, "success");
+            }
+            setTimeout(() => appContainer.classList.add('opacity-100'), 100);
+            renderView();
+        }
+
+        function toggleMode() {
+            isLoginView = !isLoginView;
+            const btn = document.getElementById('login-btn');
+            const toggleText = document.querySelector('#auth-screen span[onclick="toggleMode()"]');
+            
+            if (isLoginView) {
+                btn.innerText = "進入系統";
+                toggleText.innerHTML = '還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>';
+            } else {
+                btn.innerText = "立即註冊";
+                toggleText.innerHTML = '已有帳號？ <span class="text-neon-purple font-bold border-b border-neon-purple/50 pb-0.5">點此登入</span>';
+            }
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if(!email || !pass) return showToast("請輸入完整資訊", "error");
+
+            if (isLoginView) {
+                auth.signInWithEmailAndPassword(email, pass).catch(e => showToast(mapError(e.code), "error"));
+            } else {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(() => showToast("註冊成功！", "success"))
+                    .catch(e => showToast(mapError(e.code), "error"));
+            }
+        }
+
+        function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(e => showToast("Google 登入失敗", "error"));
+        }
+
+        function handleGuest() {
+            isGuest = true;
+            currentUser = { uid: 'guest', displayName: '訪客', email: 'guest@temp.com' };
+            records = [
+                {id: '1', type: 'camel', upper: 100, lower: 150, date: '10/24', createdAt: {seconds: Date.now()/1000}},
+                {id: '2', type: 'expense', amount: 50, name: '測試', source: '淘寶', date: '10/24', createdAt: {seconds: Date.now()/1000}}
+            ];
+            showApp();
+        }
+
+        function handleLogout() {
+            showConfirm("確定要登出系統嗎？", () => {
+                if (isGuest) {
+                    isGuest = false; records = []; currentUser = null; showAuth();
+                } else {
+                    if (unsubscribe) unsubscribe(); auth.signOut();
+                }
+            });
+        }
+
+        function mapError(code) {
+            const map = { 'auth/user-not-found': '找不到此帳號', 'auth/wrong-password': '密碼錯誤', 'auth/email-already-in-use': '此 Email 已被註冊', 'auth/weak-password': '密碼太弱', 'auth/invalid-email': 'Email 格式錯誤' };
+            return map[code] || "發生錯誤";
+        }
+
+        // --- Data Logic ---
+        function loadFirebaseData() {
+            if (unsubscribe) unsubscribe();
+            const ref = db.collection('users').doc(currentUser.uid).collection('records');
+            unsubscribe = ref.onSnapshot(snap => {
+                records = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                records.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                renderView();
+            });
+        }
+
+        // --- Render Logic ---
+        function switchView(view) {
+            currentFilter = view;
+            document.querySelectorAll('.nav-item').forEach(el => { 
+                el.classList.remove('text-neon-blue', 'active'); 
+                el.classList.add('text-gray-500'); 
+                // Icon Animation Reset
+                const icon = el.querySelector('i');
+                if(icon) {
+                    icon.classList.remove('text-neon-blue', '-translate-y-1');
+                }
+            });
+            const activeNav = document.getElementById(`nav-${view}`);
+            if (activeNav) { 
+                activeNav.classList.remove('text-gray-500'); 
+                activeNav.classList.add('text-neon-blue', 'active');
+                const icon = activeNav.querySelector('i');
+                if(icon) {
+                    icon.classList.add('text-neon-blue', '-translate-y-1');
+                }
+            }
+            renderView();
+        }
+
+        function renderView() {
+            const listContainer = document.getElementById('dynamic-list');
+            const title = document.getElementById('list-title');
+            const chartC = document.getElementById('chart-container');
+            const backBtn = document.getElementById('back-btn');
+            let filtered = [];
+            
+            let income = 0, expense = 0, sources = { camel: 0, reels: 0, kwuntong: 0 };
+            records.forEach(r => {
+                if(r.type === 'expense') expense += Number(r.amount);
+                else {
+                    let val = 0;
+                    if(r.type === 'camel') val = Number(r.upper) + Number(r.lower);
+                    if(r.type === 'reels') val = Number(r.income);
+                    if(r.type === 'kwuntong') val = Number(r.lower);
+                    income += val;
+                    sources[r.type] += val;
+                }
+            });
+
+            document.getElementById('net-profit').innerText = `$${income - expense}`;
+            document.getElementById('total-income').innerText = `$${income}`;
+            document.getElementById('total-expense').innerText = `$${expense}`;
+            let margin = income > 0 ? Math.round(((income - expense)/income)*100) : 0;
+            document.getElementById('profit-margin').innerText = `${margin}%`;
+            document.getElementById('profit-bar').style.width = `${Math.max(0, margin)}%`;
+
+            if (currentFilter === 'dashboard') {
+                filtered = records.slice(0, 5); 
+                title.innerText = "最新動態";
+                chartC.classList.remove('hidden');
+                backBtn.classList.add('hidden');
+                renderChart(sources.camel, sources.reels, sources.kwuntong);
+            } else {
+                title.innerText = getTitle(currentFilter);
+                filtered = currentFilter === 'income' ? records.filter(r => r.type !== 'expense') : records.filter(r => r.type === currentFilter);
+                chartC.classList.add('hidden');
+                backBtn.classList.remove('hidden');
+            }
+            listContainer.innerHTML = filtered.length ? filtered.map(renderItem).join('') : `<div class="text-center py-12 text-gray-600"><i class="fa-solid fa-wind text-4xl mb-2"></i><p>暫無記錄</p></div>`;
+        }
+
+        function getTitle(type) {
+            const map = { 'camel': '駱駝漆記錄', 'reels': 'Reels 宣傳', 'kwuntong': '觀塘記錄', 'expense': '支出細項', 'income': '所有收入' };
+            return map[type] || '列表';
+        }
+
+        function renderItem(r) {
+            let icon, color, title, desc, money;
+            const date = r.date || 'N/A';
+            if (r.type === 'camel') {
+                icon = 'fa-building'; color = 'text-neon-blue'; title = '駱駝漆';
+                const total = Number(r.upper) + Number(r.lower);
+                desc = `上:${r.upper} 下:${r.lower}`; money = `+$${total}`;
+            } else if (r.type === 'reels') {
+                icon = 'fa-instagram'; color = 'text-neon-purple'; title = r.content || 'Reels';
+                desc = '影片宣傳'; money = `+$${r.income}`;
+            } else if (r.type === 'kwuntong') {
+                icon = 'fa-shop'; color = 'text-orange-500'; title = '觀塘廣場';
+                desc = r.received ? '已收到退款' : '未收到退款'; money = `+$${r.lower}`;
+            } else {
+                icon = 'fa-cart-shopping'; color = 'text-neon-pink'; title = r.name;
+                desc = r.source; money = `-$${r.amount}`;
+            }
+            return `<div class="glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-colors border border-white/5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center ${color} bg-black/40"><i class="fa-brands ${icon} fa-solid"></i></div><div><h4 class="text-sm font-bold text-gray-200">${title}</h4><p class="text-[10px] text-gray-500">${date} · ${desc}</p></div></div><div class="flex items-center gap-3"><span class="font-bold font-mono ${r.type === 'expense' ? 'text-neon-pink' : 'text-neon-green'}">${money}</span><button onclick="deleteEntry('${r.id}')" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors rounded-full hover:bg-white/10"><i class="fa-solid fa-trash text-xs"></i></button></div></div>`;
+        }
+
+        function deleteEntry(id) {
+            showConfirm("刪除後無法復原，確定嗎？", async () => {
+                if (isGuest) {
+                    records = records.filter(r => r.id !== id);
+                    renderView();
+                    showToast("已從暫存刪除", "success");
+                } else {
+                    await db.collection('users').doc(currentUser.uid).collection('records').doc(id).delete();
+                    showToast("刪除成功", "success");
+                }
+            });
+        }
+
+        function renderChart(c, r, k) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            Chart.defaults.color = '#6b7280';
+            Chart.defaults.borderColor = 'transparent';
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['駱駝漆', 'Reels', '觀塘'],
+                    datasets: [{ data: [c, r, k], backgroundColor: ['#00f3ff', '#bc13fe', '#f97316'], borderWidth: 0, hoverOffset: 10 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, color: 'white', font: { family: '"Noto Sans TC"' } } } }
+                }
+            });
+        }
+
+        // --- Data Entry UI (Beautified) ---
+        let activeType = '';
+        function toggleFab() {
+            const menu = document.getElementById('fab-menu');
+            const icon = document.getElementById('fab-icon');
+            if(menu.classList.contains('scale-0')) {
+                menu.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
+                icon.style.transform = 'rotate(45deg)';
+            } else {
+                menu.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function openEntry(type, displayTitle) {
+            toggleFab();
+            activeType = type;
+            const modal = document.getElementById('entry-modal');
+            const content = document.getElementById('modal-content');
+            const formContainer = document.getElementById('modal-form-container');
+            const modalTitle = document.getElementById('modal-title');
+            
+            // Set dynamic title
+            modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${displayTitle}`;
+
+            const today = `${new Date().getMonth()+1}/${new Date().getDate()}`;
+            
+            // Generate Form HTML with Better Layout
+            let html = `
+                <div class="grid grid-cols-1 gap-5">
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label>
+                        <input id="in-date" type="text" value="${today}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors">
+                    </div>
+            `;
+            
+            if (type === 'camel') {
+                html += `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative group">
+                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">上層收入</label>
+                            <input id="in-upper" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
+                        </div>
+                        <div class="relative group">
+                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label>
+                            <input id="in-lower" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label>
+                        <input id="in-note" type="text" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue">
+                    </div>
+                `;
+            } else if (type === 'reels') {
+                html += `
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">收入金額</label>
+                        <input id="in-income" type="number" value="25" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple">
+                    </div>
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">影片內容</label>
+                        <input id="in-content" type="text" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple">
+                    </div>
+                `;
+            } else if (type === 'kwuntong') {
+                html += `
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label>
+                        <input id="in-lower" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500">
+                    </div>
+                    <div class="flex items-center justify-center p-4 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onclick="document.getElementById('in-received').click()">
+                        <input id="in-received" type="checkbox" class="w-5 h-5 rounded accent-orange-500 mr-3 custom-checkbox cursor-pointer">
+                        <span class="text-sm font-bold text-gray-300">已確認收到退款</span>
+                    </div>
+                `;
+            } else if (type === 'expense') {
+                html += `
+                    <div class="grid grid-cols-2 gap-4">
+                         <div class="relative group">
+                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">金額</label>
+                            <input id="in-amount" type="number" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink">
+                        </div>
+                        <div class="relative group">
+                            <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">項目名稱</label>
+                            <input id="in-name" type="text" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink">
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">來源</label>
+                        <input id="in-source" type="text" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3">
+                        <div class="flex justify-center gap-3">
+                            <button onclick="setSrc('淘寶')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">淘寶</button>
+                            <button onclick="setSrc('拼多多')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">拼多多</button>
+                            <button onclick="setSrc('Carousell')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">Carousell</button>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`; // Close grid
+
+            formContainer.innerHTML = html;
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        }
+
+        function closeEntry() {
+            document.getElementById('modal-content').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('entry-modal').classList.add('hidden'), 300);
+        }
+
+        function setSrc(val) { document.getElementById('in-source').value = val; }
+
+        async function submitEntry() {
+            const date = document.getElementById('in-date').value;
+            let data = { type: activeType, date, createdAt: isGuest ? {seconds: Date.now()/1000} : firebase.firestore.FieldValue.serverTimestamp() };
+            
+            if(activeType === 'camel') {
+                data.upper = document.getElementById('in-upper').value || 0;
+                data.lower = document.getElementById('in-lower').value || 0;
+                data.note = document.getElementById('in-note').value;
+            } else if(activeType === 'reels') {
+                data.income = document.getElementById('in-income').value || 0;
+                data.content = document.getElementById('in-content').value;
+            } else if(activeType === 'kwuntong') {
+                data.lower = document.getElementById('in-lower').value || 0;
+                data.received = document.getElementById('in-received').checked;
+            } else if(activeType === 'expense') {
+                data.amount = document.getElementById('in-amount').value || 0;
+                data.name = document.getElementById('in-name').value;
+                data.source = document.getElementById('in-source').value || '其他';
+            }
+
+            if(isGuest) {
+                data.id = 'guest_' + Date.now();
+                records.unshift(data);
+                showToast("訪客資料已暫存", "success");
+            } else {
+                await db.collection('users').doc(currentUser.uid).collection('records').add(data);
+                showToast("資料已雲端同步", "success");
+            }
+            closeEntry();
+            if(isGuest) renderView();
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
+
+
