@@ -74,7 +74,6 @@
         .toast-msg { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; border-left: 4px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
         .toast-success { border-color: #0aff00; } .toast-error { border-color: #ff0055; } .toast-info { border-color: #00f3ff; }
         
-        /* 3D Dynamic Keypad */
         .keypad-btn {
             background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -96,16 +95,10 @@
         }
         .keypad-btn:active::after { opacity: 1; }
         .keypad-del { color: #ff0055; }
-        
-        /* Date Picker Invert */
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.6; }
         
-        .delete-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .delete-btn.swiped {
-            transform: translateX(-50px);
-        }
+        /* Card Hover Effect */
+        .record-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body class="text-white pb-24">
@@ -137,7 +130,7 @@
                 <div class="text-center mb-8">
                     <div class="w-24 h-24 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-neon-blue/20 mb-5 animate-float"><i class="fa-solid fa-robot text-5xl text-white"></i></div>
                     <h1 class="text-3xl font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-1">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.6</p>
+                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.7</p>
                 </div>
                 <div id="login-form" class="space-y-5">
                     <div class="relative group"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors text-lg"></i></div><input type="email" id="email" placeholder="電子郵件" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none"></div>
@@ -163,7 +156,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-lg"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.6 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.7 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -179,7 +172,6 @@
 
         <main class="px-4 pb-28 relative z-10 max-w-2xl mx-auto mt-4">
             
-            <!-- Views Container -->
             <div id="main-views">
                 <div class="grid grid-cols-2 gap-3 mb-6">
                     <div onclick="switchView('income')" class="glass-panel p-4 rounded-2xl cursor-pointer hover:bg-white/5 border border-white/5 hover:border-neon-green/50 transition-all active:scale-95"><div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#0aff00]"></div><p class="text-xs text-gray-400 font-bold">總收入</p></div><p class="text-lg font-bold text-white tracking-wide" id="total-income">$0</p></div>
@@ -196,7 +188,7 @@
                 </div>
             </div>
 
-            <!-- Settings View -->
+            <!-- Settings -->
             <div id="settings-view" class="hidden space-y-6 animate-fade-in pt-2">
                 <div class="flex items-center gap-3 mb-4"><button onclick="switchView('dashboard')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button><h2 class="text-xl font-bold">設定</h2></div>
                 <div class="glass-panel p-6 rounded-2xl">
@@ -209,7 +201,7 @@
                 </div>
             </div>
 
-            <!-- Attendance View -->
+            <!-- Attendance -->
             <div id="attendance-view" class="hidden space-y-6 text-center animate-slide-up-modal pt-4">
                 <div class="glass-panel p-6 rounded-3xl w-full max-w-sm mx-auto border border-white/10 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-20"><i class="fa-solid fa-business-time text-6xl text-white"></i></div>
@@ -269,14 +261,17 @@
                     <button onclick="closeEntry()" class="absolute right-6 top-4 text-gray-400 hover:text-white p-2"><i class="fa-solid fa-chevron-down"></i></button>
                 </div>
                 <div class="px-8 pb-8 overflow-y-auto flex-1 no-scrollbar">
-                    <h3 class="text-2xl font-black text-white mb-8 flex items-center justify-center gap-3 text-center" id="modal-title"><i class="fa-solid fa-pen-to-square"></i> 新增記錄</h3>
+                    <h3 class="text-2xl font-black text-white mb-8 flex items-center justify-center gap-3 text-center" id="modal-title">新增記錄</h3>
                     <div id="modal-form-container" class="space-y-6"></div>
-                    <div class="mt-8 flex justify-center pb-8"><button onclick="submitEntry()" class="w-full sm:w-2/3 py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button></div>
+                    <div class="mt-8 flex flex-col gap-3 justify-center pb-8">
+                        <button id="modal-submit-btn" onclick="submitEntry()" class="w-full py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button>
+                        <button id="modal-delete-btn" onclick="deleteFromModal()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold hidden hover:bg-red-500/20 transition-all active:scale-95 text-lg">刪除此記錄</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Custom Numeric Keypad -->
+        <!-- Keypad -->
         <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-300 border-t border-white/20 pb-safe shadow-2xl">
             <div class="flex justify-between items-center px-6 py-3 bg-black/30 border-b border-white/5 backdrop-blur-xl">
                 <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Hines Input</span>
@@ -323,16 +318,14 @@
         let activeKeypadInput = null; 
         let workInterval = null;
         let workStartTime = null;
-        // Default Custom Sources
+        let activeEditId = null; // Track editing
         let customSources = ['淘寶', '拼多多', 'Carousell', 'Amazon', 'HKTVMall'];
 
-        // --- Initialization ---
         function init() {
             try {
                 app = firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
-                
                 auth.onAuthStateChanged(user => {
                     if (user && !isGuest) {
                         currentUser = user;
@@ -345,33 +338,20 @@
                     }
                 });
                 startClock();
-            } catch (e) {
-                showToast("系統初始化失敗", "error");
-            }
+            } catch (e) { showToast("系統初始化失敗", "error"); }
         }
 
-        // --- Settings Logic ---
         function loadSettings() {
             if(isGuest) return;
             db.collection('users').doc(currentUser.uid).get().then(doc => {
-                if(doc.exists && doc.data().customSources) {
-                    customSources = doc.data().customSources;
-                }
+                if(doc.exists && doc.data().customSources) customSources = doc.data().customSources;
             });
         }
-
-        function openSettings() {
-            switchView('settings');
-            renderSourceList();
-        }
-
+        function openSettings() { switchView('settings'); renderSourceList(); }
         function renderSourceList() {
             const container = document.getElementById('source-list');
-            container.innerHTML = customSources.map(s => 
-                `<span class="px-3 py-1 bg-white/10 rounded-full text-xs flex items-center gap-2 border border-white/5">${s} <button onclick="removeSource('${s}')" class="text-red-400 hover:text-white"><i class="fa-solid fa-times"></i></button></span>`
-            ).join('');
+            container.innerHTML = customSources.map(s => `<span class="px-3 py-1 bg-white/10 rounded-full text-xs flex items-center gap-2 border border-white/5">${s} <button onclick="removeSource('${s}')" class="text-red-400 hover:text-white"><i class="fa-solid fa-times"></i></button></span>`).join('');
         }
-
         async function addSource() {
             const input = document.getElementById('new-source-input');
             const val = input.value.trim();
@@ -379,33 +359,27 @@
             if(!customSources.includes(val)) {
                 customSources.push(val);
                 if(!isGuest) await db.collection('users').doc(currentUser.uid).set({ customSources: customSources }, { merge: true });
-                renderSourceList();
-                input.value = '';
-                showToast("來源已新增", "success");
+                renderSourceList(); input.value = ''; showToast("來源已新增", "success");
             }
         }
-
         async function removeSource(val) {
             customSources = customSources.filter(s => s !== val);
             if(!isGuest) await db.collection('users').doc(currentUser.uid).set({ customSources: customSources }, { merge: true });
             renderSourceList();
         }
 
-        // --- Attendance System ---
+        // --- Attendance ---
         function startClock() {
             setInterval(() => {
                 const now = new Date();
                 document.getElementById('clock-time').innerText = now.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
                 document.getElementById('clock-date').innerText = `${now.getMonth()+1}/${now.getDate()} ${now.toLocaleDateString('zh-HK', {weekday: 'long'})}`;
-                
                 if (workStartTime) {
                     const diff = now - workStartTime;
                     const hrs = Math.floor(diff / 3600000);
                     const mins = Math.floor((diff % 3600000) / 60000);
                     const secs = Math.floor((diff % 60000) / 1000);
                     document.getElementById('work-duration').innerText = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-                    
-                    // Estimate
                     const oneHr = new Date(workStartTime.getTime() + 3600000);
                     const twoHr = new Date(workStartTime.getTime() + 7200000);
                     document.getElementById('est-1h').innerText = oneHr.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
@@ -413,165 +387,69 @@
                 }
             }, 1000);
         }
-
         function checkAttendanceStatus() {
             if(isGuest) return;
             db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').onSnapshot(doc => {
-                const statusText = document.getElementById('work-status-text');
-                const btnIn = document.getElementById('btn-clock-in');
-                const btnOut = document.getElementById('btn-clock-out');
-                const activeInfo = document.getElementById('active-work-info');
-                
+                const statusText = document.getElementById('work-status-text'), btnIn = document.getElementById('btn-clock-in'), btnOut = document.getElementById('btn-clock-out'), activeInfo = document.getElementById('active-work-info');
                 if (doc.exists) {
                     workStartTime = doc.data().startTime.toDate();
                     statusText.innerText = `上班中 (${workStartTime.getHours()}:${String(workStartTime.getMinutes()).padStart(2,'0')} 開始)`;
                     statusText.className = "text-neon-green text-xs mt-4 font-bold animate-pulse text-left";
-                    btnIn.classList.add('hidden');
-                    btnOut.classList.remove('hidden');
-                    activeInfo.classList.remove('hidden');
+                    btnIn.classList.add('hidden'); btnOut.classList.remove('hidden'); activeInfo.classList.remove('hidden');
                 } else {
                     workStartTime = null;
-                    statusText.innerText = "準備就緒";
-                    statusText.className = "text-gray-500 text-xs mt-4 font-bold text-left";
-                    btnIn.classList.remove('hidden');
-                    btnOut.classList.add('hidden');
-                    activeInfo.classList.add('hidden');
+                    statusText.innerText = "準備就緒"; statusText.className = "text-gray-500 text-xs mt-4 font-bold text-left";
+                    btnIn.classList.remove('hidden'); btnOut.classList.add('hidden'); activeInfo.classList.add('hidden');
                 }
             });
         }
-
         async function startWork() {
             if(isGuest) { showToast("訪客模式無法打卡", "info"); return; }
-            try {
-                await db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').set({
-                    startTime: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast("上班打卡成功", "success");
-            } catch(e) { showToast("打卡失敗", "error"); }
+            try { await db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').set({ startTime: firebase.firestore.FieldValue.serverTimestamp() }); showToast("上班打卡成功", "success"); } catch(e) { showToast("打卡失敗", "error"); }
         }
-
         async function endWork() {
             if(isGuest) return;
             try {
                 const docRef = db.collection('users').doc(currentUser.uid).collection('attendance').doc('current');
                 const doc = await docRef.get();
                 if(!doc.exists) return;
-
-                const start = doc.data().startTime.toDate();
-                const end = new Date();
-                const diffMs = end - start;
-                const diffMins = diffMs / 1000 / 60;
-                
+                const start = doc.data().startTime.toDate(), end = new Date();
+                const diffMs = end - start, diffMins = diffMs / 1000 / 60;
                 const blocks = Math.ceil(diffMins / 30);
-                const pay = blocks * 25;
-                const hours = (blocks * 0.5).toFixed(1);
-
-                const recordData = {
-                    type: 'attendance',
-                    date: `${end.getMonth()+1}/${end.getDate()}`,
-                    amount: pay,
-                    note: `工時: ${hours}小時`,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
+                const pay = blocks * 25, hours = (blocks * 0.5).toFixed(1);
+                const recordData = { type: 'attendance', date: `${end.getMonth()+1}/${end.getDate()}`, amount: pay, note: `工時: ${hours}小時`, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                 await db.collection('users').doc(currentUser.uid).collection('records').add(recordData);
-                await docRef.delete(); 
-                workStartTime = null;
-                
-                showToast(`下班！薪資 $${pay} 已記錄`, "success");
+                await docRef.delete(); workStartTime = null; showToast(`下班！薪資 $${pay} 已記錄`, "success");
             } catch(e) { console.error(e); showToast("結算失敗", "error"); }
         }
 
-        // --- Core Helpers ---
-        function showToast(msg, type = "info") {
-            const container = document.getElementById('toast-container');
-            const el = document.createElement('div');
-            el.className = `toast-msg toast-${type}`;
-            let icon = type === 'success' ? 'fa-check' : (type === 'error' ? 'fa-xmark' : 'fa-info');
-            el.innerHTML = `<span><i class="fa-solid ${icon} mr-2"></i> ${msg}</span>`;
-            container.appendChild(el);
-            setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-20px)'; setTimeout(() => el.remove(), 300); }, 3000);
-        }
+        // --- Helpers ---
+        function showToast(msg, type="info") { const c=document.getElementById('toast-container'), e=document.createElement('div'); e.className=`toast-msg toast-${type}`; e.innerHTML=`<span><i class="fa-solid ${type==='success'?'fa-check':type==='error'?'fa-xmark':'fa-info'} mr-2"></i> ${msg}</span>`; c.appendChild(e); setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(-20px)';setTimeout(()=>e.remove(),300);},3000); }
+        let confirmCallback=null; function showConfirm(msg, cb) { const m=document.getElementById('custom-confirm'), b=document.getElementById('confirm-box'); document.getElementById('confirm-msg').innerText=msg; confirmCallback=cb; m.classList.remove('hidden'); setTimeout(()=>{m.classList.remove('opacity-0');b.classList.remove('scale-95');b.classList.add('scale-100');},10); }
+        function closeConfirm(res) { const m=document.getElementById('custom-confirm'), b=document.getElementById('confirm-box'); b.classList.remove('scale-100'); b.classList.add('scale-95'); m.classList.add('opacity-0'); setTimeout(()=>{m.classList.add('hidden'); if(res && confirmCallback) confirmCallback(); confirmCallback=null;},300); }
+        document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
+        function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
+        function closeKeypad() { document.getElementById('custom-keypad').classList.add('translate-y-full'); activeKeypadInput=null; }
+        function kpInput(v) { if(activeKeypadInput) { activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); } }
+        function kpDel() { if(activeKeypadInput) activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); }
 
-        let confirmCallback = null;
-        function showConfirm(msg, callback) {
-            const modal = document.getElementById('custom-confirm');
-            const box = document.getElementById('confirm-box');
-            document.getElementById('confirm-msg').innerText = msg;
-            confirmCallback = callback;
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
-        }
-        function closeConfirm(result) {
-            const modal = document.getElementById('custom-confirm');
-            const box = document.getElementById('confirm-box');
-            box.classList.remove('scale-100'); box.classList.add('scale-95'); modal.classList.add('opacity-0');
-            setTimeout(() => { modal.classList.add('hidden'); if (result && confirmCallback) confirmCallback(); confirmCallback = null; }, 300);
-        }
-        document.getElementById('confirm-yes-btn').onclick = () => closeConfirm(true);
-
-        function openKeypad(inputId) {
-            activeKeypadInput = document.getElementById(inputId);
-            const kp = document.getElementById('custom-keypad');
-            kp.classList.remove('translate-y-full');
-        }
-        function closeKeypad() {
-            document.getElementById('custom-keypad').classList.add('translate-y-full');
-            activeKeypadInput = null;
-        }
-        function kpInput(val) {
-            if(!activeKeypadInput) return;
-            activeKeypadInput.value += val;
-            activeKeypadInput.dispatchEvent(new Event('input'));
-        }
-        function kpDel() {
-            if(!activeKeypadInput) return;
-            activeKeypadInput.value = activeKeypadInput.value.slice(0, -1);
-        }
-
-        // --- Auth ---
+        // --- Core ---
         function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
-        function showApp() {
-            const name = currentUser.displayName || currentUser.email.split('@')[0];
-            const avatar = currentUser.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.uid}`;
-            document.getElementById('user-name').innerText = name;
-            document.getElementById('user-avatar').src = avatar;
-            document.getElementById('auth-screen').classList.add('hidden');
-            const appC = document.getElementById('app-container');
-            appC.classList.remove('hidden');
+        function showApp() { 
+            const name=currentUser.displayName||currentUser.email.split('@')[0], avatar=currentUser.photoURL||`https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.uid}`;
+            document.getElementById('user-name').innerText=name; document.getElementById('user-avatar').src=avatar;
+            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app-container').classList.remove('hidden');
             if(isGuest) document.getElementById('guest-banner').classList.remove('hidden'); else document.getElementById('guest-banner').classList.add('hidden');
-            setTimeout(() => appC.classList.add('opacity-100'), 100);
-            renderView();
+            setTimeout(()=>document.getElementById('app-container').classList.add('opacity-100'),100); renderView();
         }
-        function toggleMode() {
-            isLoginView = !isLoginView;
-            const btn = document.getElementById('login-btn');
-            const toggleText = document.querySelector('#auth-screen span[onclick="toggleMode()"]');
-            if (isLoginView) { btn.innerText = "進入系統"; toggleText.innerHTML = '還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>'; } 
-            else { btn.innerText = "立即註冊"; toggleText.innerHTML = '已有帳號？ <span class="text-neon-purple font-bold border-b border-neon-purple/50 pb-0.5">點此登入</span>'; }
-        }
-        function handleLogin() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            if(!email || !pass) return showToast("請輸入完整資訊", "error");
-            if (isLoginView) auth.signInWithEmailAndPassword(email, pass).catch(e => showToast(e.message, "error"));
-            else auth.createUserWithEmailAndPassword(email, pass).then(() => showToast("註冊成功！", "success")).catch(e => showToast(e.message, "error"));
-        }
-        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => showToast("Google 登入失敗", "error")); }
-        function handleGuest() {
-            isGuest = true; currentUser = { uid: 'guest', displayName: '訪客', email: 'guest@temp.com' };
-            records = [{id: '1', type: 'camel', upper: 100, lower: 150, date: '10/24', createdAt: {seconds: Date.now()/1000}}];
-            showApp();
-        }
-        function handleLogout() {
-            showConfirm("確定要登出系統嗎？", () => {
-                if (isGuest) { isGuest = false; records = []; currentUser = null; showAuth(); } else { if (unsubscribe) unsubscribe(); auth.signOut(); }
-            });
-        }
+        function toggleMode() { isLoginView=!isLoginView; const b=document.getElementById('login-btn'), t=document.querySelector('#auth-screen span[onclick="toggleMode()"]'); if(isLoginView){b.innerText="進入系統";t.innerHTML='還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/50 pb-0.5">點此註冊</span>';}else{b.innerText="立即註冊";t.innerHTML='已有帳號？ <span class="text-neon-purple font-bold border-b border-neon-purple/50 pb-0.5">點此登入</span>';} }
+        function handleLogin() { const e=document.getElementById('email').value, p=document.getElementById('password').value; if(!e||!p) return showToast("請輸入完整資訊","error"); if(isLoginView) auth.signInWithEmailAndPassword(e,p).catch(err=>showToast(err.message,"error")); else auth.createUserWithEmailAndPassword(e,p).then(()=>showToast("註冊成功","success")).catch(err=>showToast(err.message,"error")); }
+        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>showToast("Google 登入失敗","error")); }
+        function handleGuest() { isGuest=true; currentUser={uid:'guest',displayName:'訪客',email:'guest@temp.com'}; records=[{id:'1',type:'camel',upper:100,lower:150,date:'10/24',createdAt:{seconds:Date.now()/1000}}]; showApp(); }
+        function handleLogout() { showConfirm("確定登出？",()=>{ if(isGuest){isGuest=false;records=[];currentUser=null;showAuth();}else{if(unsubscribe)unsubscribe();auth.signOut();} }); }
 
-        // --- Data ---
         function loadFirebaseData() {
-            if (unsubscribe) unsubscribe();
+            if(unsubscribe) unsubscribe();
             const ref = db.collection('users').doc(currentUser.uid).collection('records');
             unsubscribe = ref.onSnapshot(snap => {
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -580,36 +458,24 @@
             });
         }
 
-        // --- Render ---
         function switchView(view) {
             currentFilter = view;
             document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('text-neon-blue', 'active'); el.classList.add('text-gray-500'); });
             const activeNav = document.getElementById(`nav-${view}`);
             if (activeNav) { activeNav.classList.remove('text-gray-500'); activeNav.classList.add('text-neon-blue', 'active'); }
-            
             document.getElementById('main-views').classList.add('hidden');
             document.getElementById('settings-view').classList.add('hidden');
             document.getElementById('attendance-view').classList.add('hidden');
             document.getElementById('fab-container').classList.add('hidden');
             document.getElementById('dashboard-card').classList.add('hidden');
 
-            if(view === 'attendance') {
-                document.getElementById('attendance-view').classList.remove('hidden');
-                renderAttendanceHistory();
-            } else if (view === 'settings') {
-                document.getElementById('settings-view').classList.remove('hidden');
-                document.getElementById('fab-container').classList.remove('hidden'); // Keep FAB? maybe not.
-                document.getElementById('dashboard-card').classList.remove('hidden');
-            } else {
-                document.getElementById('main-views').classList.remove('hidden');
-                document.getElementById('fab-container').classList.remove('hidden');
-                document.getElementById('dashboard-card').classList.remove('hidden');
-                renderView();
-            }
+            if(view === 'attendance') { document.getElementById('attendance-view').classList.remove('hidden'); renderAttendanceHistory(); }
+            else if(view === 'settings') { document.getElementById('settings-view').classList.remove('hidden'); document.getElementById('fab-container').classList.remove('hidden'); document.getElementById('dashboard-card').classList.remove('hidden'); }
+            else { document.getElementById('main-views').classList.remove('hidden'); document.getElementById('fab-container').classList.remove('hidden'); document.getElementById('dashboard-card').classList.remove('hidden'); renderView(); }
         }
 
         function renderView() {
-            const listContainer = document.getElementById('dynamic-list');
+            const list = document.getElementById('dynamic-list');
             const title = document.getElementById('list-title');
             const chartC = document.getElementById('chart-container');
             const backBtn = document.getElementById('back-btn');
@@ -623,16 +489,8 @@
                     if(r.type === 'camel') val = Number(r.upper) + Number(r.lower);
                     if(r.type === 'reels') val = Number(r.income);
                     if(r.type === 'kwuntong') {
-                        let low = Number(r.lower || 0);
-                        let ref = Number(r.refund || 0);
-                        // User Logic: Lower is Income. Refund is Expense if CONFIRMED.
-                        // Wait, user said: "If user filled refund column, count as expense."
-                        // And "In record right side add button... if pressed, then reimburse".
-                        // So unconfirmed refund is pending expense? Or confirmed is expense?
-                        // Let's assume Refund Input = Expense. Status just tracks it.
-                        // To keep Net Profit accurate: Income += Lower. Expense += Refund.
-                        val = low;
-                        expense += ref; 
+                        val = Number(r.lower || 0); // Income
+                        expense += Number(r.refund || 0); // Expense
                     }
                     if(r.type === 'attendance') val = Number(r.amount);
                     income += val;
@@ -655,7 +513,7 @@
                 filtered = currentFilter === 'income' ? records.filter(r => r.type !== 'expense') : records.filter(r => r.type === currentFilter);
                 chartC.classList.add('hidden'); backBtn.classList.remove('hidden');
             }
-            listContainer.innerHTML = filtered.length ? filtered.map(renderItem).join('') : `<div class="text-center py-12 text-gray-600"><i class="fa-solid fa-wind text-4xl mb-2"></i><p>暫無記錄</p></div>`;
+            list.innerHTML = filtered.length ? filtered.map(renderItem).join('') : `<div class="text-center py-12 text-gray-600"><i class="fa-solid fa-wind text-4xl mb-2"></i><p>暫無記錄</p></div>`;
         }
 
         function renderAttendanceHistory() {
@@ -672,6 +530,8 @@
         function renderItem(r) {
             let icon, color, title, desc, money, extraAction = '';
             const date = r.date || 'N/A';
+            const clickAttr = `onclick="editRecord('${r.id}')"`; // Make card clickable
+
             if (r.type === 'camel') {
                 icon = 'fa-building'; color = 'text-neon-blue'; title = '駱駝漆';
                 const total = Number(r.upper) + Number(r.lower); desc = `上:${r.upper} 下:${r.lower}`; money = `+$${total}`;
@@ -683,14 +543,9 @@
                 let refTxt = refAmt > 0 ? ` <span class="text-red-400 block mt-1">退款: -$${refAmt}</span>` : '';
                 desc = `下層: $${r.lower}` + refTxt; 
                 money = `+$${r.lower}`;
-                
-                // Refund Action
                 if (refAmt > 0) {
-                    if (r.refunded) {
-                        extraAction = `<span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">已退款</span>`;
-                    } else {
-                        extraAction = `<button onclick="confirmRefund('${r.id}')" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-500 hover:text-white transition-colors">確認退款</button>`;
-                    }
+                    if (r.refunded) extraAction = `<span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30 ml-2" onclick="event.stopPropagation()">已退款</span>`;
+                    else extraAction = `<button onclick="event.stopPropagation(); confirmRefund('${r.id}')" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-500 hover:text-white transition-colors ml-2">確認退款</button>`;
                 }
             } else if (r.type === 'attendance') {
                 icon = 'fa-clock'; color = 'text-neon-green'; title = '薪資收入'; desc = r.note; money = `+$${r.amount}`;
@@ -699,18 +554,17 @@
             }
             
             return `
-            <div class="glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-colors border border-white/5 mb-2">
+            <div class="record-card glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-colors border border-white/5 mb-2 cursor-pointer" ${clickAttr}>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center ${color} bg-black/40 flex-shrink-0"><i class="fa-brands ${icon} fa-solid"></i></div>
                     <div>
-                        <h4 class="text-sm font-bold text-gray-200">${title}</h4>
+                        <h4 class="text-sm font-bold text-gray-200">${title} ${extraAction}</h4>
                         <p class="text-[10px] text-gray-500 leading-tight">${date} · ${desc}</p>
-                        ${extraAction ? `<div class="mt-1">${extraAction}</div>` : ''}
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold font-mono ${r.type === 'expense' ? 'text-neon-pink' : 'text-neon-green'}">${money}</span>
-                    <button onclick="deleteEntry('${r.id}')" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors rounded-full hover:bg-white/10"><i class="fa-solid fa-trash text-xs"></i></button>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-600"></i>
                 </div>
             </div>`;
         }
@@ -719,6 +573,12 @@
             if(isGuest) return showToast("訪客模式無法操作", "info");
             await db.collection('users').doc(currentUser.uid).collection('records').doc(id).update({ refunded: true });
             showToast("已確認退款", "success");
+        }
+
+        function deleteFromModal() {
+            if (!activeEditId) return;
+            deleteEntry(activeEditId);
+            closeEntry();
         }
 
         function deleteEntry(id) {
@@ -736,32 +596,42 @@
         }
 
         // --- Data Entry UI ---
-        let activeType = '';
         function toggleFab() { const m=document.getElementById('fab-menu'), i=document.getElementById('fab-icon'); if(m.classList.contains('scale-0')) { m.classList.remove('scale-0', 'opacity-0', 'pointer-events-none'); i.style.transform = 'rotate(45deg)'; } else { m.classList.add('scale-0', 'opacity-0', 'pointer-events-none'); i.style.transform = 'rotate(0deg)'; } }
 
-        function openEntry(type, displayTitle) {
-            toggleFab(); activeType = type;
+        function openEntry(type, displayTitle, editData = null) {
+            if(!editData) toggleFab(); // Only toggle FAB if new entry
+            activeType = type;
+            activeEditId = editData ? editData.id : null;
+            
             const modal = document.getElementById('entry-modal'); const content = document.getElementById('modal-content'); const formContainer = document.getElementById('modal-form-container'); const modalTitle = document.getElementById('modal-title');
-            modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${displayTitle}`;
             
-            const dateObj = new Date();
-            const todayStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+            modalTitle.innerHTML = editData ? `<i class="fa-solid fa-pen"></i> 修改記錄` : `<i class="fa-solid fa-pen-to-square"></i> ${displayTitle}`;
+            document.getElementById('modal-submit-btn').innerText = editData ? "更新記錄" : "確認儲存";
+            
+            // Show Delete button if editing
+            const delBtn = document.getElementById('modal-delete-btn');
+            if (editData) delBtn.classList.remove('hidden'); else delBtn.classList.add('hidden');
 
-            let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${todayStr}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors"></div>`;
+            // Default Values
+            let dateVal = editData ? formatDateForInput(editData.date) : new Date().toISOString().split('T')[0];
             
+            let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${dateVal}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors"></div>`;
+            
+            // Populate Fields based on Type & Edit Data
             if (type === 'camel') {
-                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">上層收入</label><input id="in-upper" type="number" readonly onclick="openKeypad('in-upper')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label><input id="in-lower" type="number" readonly onclick="openKeypad('in-lower')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label><input id="in-note" type="text" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue"></div>`;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">上層收入</label><input id="in-upper" type="number" value="${editData?.upper||''}" readonly onclick="openKeypad('in-upper')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label><input id="in-lower" type="number" value="${editData?.lower||''}" readonly onclick="openKeypad('in-lower')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label><input id="in-note" type="text" value="${editData?.note||''}" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue"></div>`;
             } else if (type === 'reels') {
-                html += `<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">收入金額</label><input id="in-income" type="number" value="25" readonly onclick="openKeypad('in-income')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">影片內容</label><input id="in-content" type="text" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple"></div>`;
+                html += `<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">收入金額</label><input id="in-income" type="number" value="${editData?.income||25}" readonly onclick="openKeypad('in-income')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">影片內容</label><input id="in-content" type="text" value="${editData?.content||''}" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple"></div>`;
             } else if (type === 'kwuntong') {
-                html += `<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入 (計入總收)</label><input id="in-lower" type="number" readonly onclick="openKeypad('in-lower')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500 cursor-pointer"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400 rounded">退款金額 (計入支出)</label><input id="in-refund" type="number" placeholder="如有" readonly onclick="openKeypad('in-refund')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-red-500 text-red-300 cursor-pointer"></div>`;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">下層收入</label><input id="in-lower" type="number" value="${editData?.lower||''}" readonly onclick="openKeypad('in-lower')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500 cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400 rounded">退款金額</label><input id="in-refund" type="number" value="${editData?.refund||''}" placeholder="如有" readonly onclick="openKeypad('in-refund')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-red-500 text-red-300 cursor-pointer"></div></div>`;
             } else if (type === 'expense') {
-                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">金額</label><input id="in-amount" type="number" readonly onclick="openKeypad('in-amount')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">項目名稱</label><input id="in-name" type="text" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">來源</label><input id="in-source" type="text" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3"><div class="flex flex-wrap gap-2 justify-center" id="modal-source-list"></div></div>`;
+                html += `<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">金額</label><input id="in-amount" type="number" value="${editData?.amount||''}" readonly onclick="openKeypad('in-amount')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">項目名稱</label><input id="in-name" type="text" value="${editData?.name||''}" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink"></div></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">來源</label><input id="in-source" type="text" value="${editData?.source||''}" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3"><div class="flex justify-center gap-3" id="modal-source-list"></div></div>`;
+            } else if (type === 'attendance') {
+                html += `<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">薪資金額</label><input id="in-amount" type="number" value="${editData?.amount||''}" readonly onclick="openKeypad('in-amount')" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-green cursor-pointer"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400 rounded">備註</label><input id="in-note" type="text" value="${editData?.note||''}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-green"></div>`;
             }
             html += `</div>`;
-            formContainer.innerHTML = html; 
+            formContainer.innerHTML = html;
             
-            // Populate Sources in Modal
             if(type === 'expense') {
                 document.getElementById('modal-source-list').innerHTML = customSources.map(s => 
                     `<button onclick="setSrc('${s}')" class="px-3 py-1.5 rounded-full bg-white/5 hover:bg-neon-pink hover:text-white transition-colors text-xs border border-white/10">${s}</button>`
@@ -771,21 +641,33 @@
             modal.classList.remove('hidden'); setTimeout(() => content.classList.remove('translate-y-full'), 10);
         }
 
-        function closeEntry() { document.getElementById('modal-content').classList.add('translate-y-full'); setTimeout(() => document.getElementById('entry-modal').classList.add('hidden'), 300); closeKeypad(); }
-        function setSrc(val) { document.getElementById('in-source').value = val; }
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (record) {
+                openEntry(record.type, '', record);
+            }
+        }
 
-        // Swipe Down Logic
-        let touchstartY = 0; const modalContent = document.getElementById('modal-content'); const dragHandle = document.getElementById('modal-drag-handle');
-        dragHandle.addEventListener('touchstart', e => touchstartY = e.changedTouches[0].screenY);
-        dragHandle.addEventListener('touchmove', e => { const dist = e.changedTouches[0].screenY - touchstartY; if(dist > 0) modalContent.style.transform = `translateY(${dist}px)`; });
-        dragHandle.addEventListener('touchend', e => { const dist = e.changedTouches[0].screenY - touchstartY; modalContent.style.transform = ''; if(dist > 100) closeEntry(); else modalContent.classList.remove('translate-y-full'); });
+        function formatDateForInput(dateStr) {
+            // dateStr usually "M/D" -> convert to YYYY-MM-DD using current year
+            const parts = dateStr.split('/');
+            if(parts.length === 2) {
+                const now = new Date();
+                return `${now.getFullYear()}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+            }
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function closeEntry() { document.getElementById('modal-content').classList.add('translate-y-full'); setTimeout(() => document.getElementById('entry-modal').classList.add('hidden'), 300); closeKeypad(); activeEditId = null; }
+        function setSrc(val) { document.getElementById('in-source').value = val; }
 
         async function submitEntry() {
             const dateVal = document.getElementById('in-date').value;
             const dateObj = new Date(dateVal);
             const displayDate = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
 
-            let data = { type: activeType, date: displayDate, createdAt: isGuest ? {seconds: Date.now()/1000} : firebase.firestore.FieldValue.serverTimestamp() };
+            let data = { type: activeType, date: displayDate };
+            if(!activeEditId && !isGuest) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             
             if(activeType === 'camel') {
                 data.upper = document.getElementById('in-upper').value || 0;
@@ -797,17 +679,32 @@
             } else if(activeType === 'kwuntong') {
                 data.lower = document.getElementById('in-lower').value || 0;
                 data.refund = document.getElementById('in-refund').value || 0;
-                data.refunded = false; // Initial state
             } else if(activeType === 'expense') {
                 data.amount = document.getElementById('in-amount').value || 0;
                 data.name = document.getElementById('in-name').value;
                 data.source = document.getElementById('in-source').value || '其他';
+            } else if(activeType === 'attendance') {
+                data.amount = document.getElementById('in-amount').value || 0;
+                data.note = document.getElementById('in-note').value;
             }
 
             if(isGuest) {
-                data.id = 'guest_' + Date.now(); records.unshift(data); showToast("訪客資料已暫存", "success");
+                if(activeEditId) {
+                    const idx = records.findIndex(r => r.id === activeEditId);
+                    if(idx !== -1) records[idx] = { ...records[idx], ...data };
+                    showToast("記錄已更新 (暫存)", "success");
+                } else {
+                    data.id = 'guest_' + Date.now(); records.unshift(data); showToast("訪客資料已暫存", "success");
+                }
             } else {
-                await db.collection('users').doc(currentUser.uid).collection('records').add(data); showToast("資料已雲端同步", "success");
+                const ref = db.collection('users').doc(currentUser.uid).collection('records');
+                if (activeEditId) {
+                    await ref.doc(activeEditId).update(data);
+                    showToast("記錄已更新", "success");
+                } else {
+                    await ref.add(data);
+                    showToast("資料已雲端同步", "success");
+                }
             }
             closeEntry(); if(isGuest) renderView();
         }
