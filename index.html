@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>騫記錄專用網站</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
@@ -34,8 +39,8 @@
                         'float': 'float 6s ease-in-out infinite',
                         'blob': 'blob 7s infinite',
                         'slide-up-modal': 'slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'fade-in': 'fadeIn 0.3s ease-out',
-                        'input-flash': 'inputFlash 0.2s ease-out'
+                        'keypad-up': 'keypadUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'fade-in': 'fadeIn 0.3s ease-out'
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
@@ -46,8 +51,8 @@
                             '100%': { transform: 'translate(0px, 0px) scale(1)' }
                         },
                         slideUpModal: { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
-                        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-                        inputFlash: { '0%': { borderColor: '#00f3ff', boxShadow: '0 0 15px #00f3ff' }, '100%': { borderColor: 'rgba(255,255,255,0.1)', boxShadow: 'none' } }
+                        keypadUp: { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
+                        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } }
                     }
                 }
             }
@@ -58,7 +63,7 @@
             background-color: #050511; color: #ffffff;
             font-family: "Noto Sans TC", sans-serif;
             overflow-x: hidden; -webkit-tap-highlight-color: transparent;
-            user-select: none; /* Prevent text selection for app-like feel */
+            user-select: none;
         }
         .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #050511; overflow: hidden; }
         .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: blob 10s infinite; }
@@ -70,35 +75,38 @@
         .toast-msg { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; border-left: 4px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; }
         .toast-success { border-color: #0aff00; } .toast-error { border-color: #ff0055; } .toast-info { border-color: #00f3ff; }
         
-        /* 🔥 V3.8 Keypad Upgrade: Extreme Feedback
-        */
         .keypad-btn {
-            background: rgba(255, 255, 255, 0.03);
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white; font-size: 1.6rem; font-weight: 500; border-radius: 12px;
+            color: white; font-size: 1.5rem; font-weight: 700; border-radius: 1rem;
             display: flex; align-items: center; justify-content: center;
-            touch-action: manipulation; /* Eliminate tap delay */
-            transition: transform 0.05s, background 0.05s, box-shadow 0.05s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative; overflow: hidden;
+            touch-action: manipulation;
         }
-        /* Active State (JS triggered for consistency) */
+        .keypad-btn::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .keypad-btn:active { 
+            transform: scale(0.92); 
+            box-shadow: 0 2px 3px rgba(0,0,0,0.3), inset 0 2px 5px rgba(0,0,0,0.5);
+            border-color: #00f3ff; color: #00f3ff;
+        }
         .keypad-btn.pressed {
-            background: rgba(0, 243, 255, 0.2);
-            border-color: #00f3ff;
-            color: #fff;
-            transform: scale(0.92) translateY(2px);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
-            text-shadow: 0 0 10px #00f3ff;
+            transform: scale(0.92); 
+            box-shadow: 0 2px 3px rgba(0,0,0,0.3), inset 0 2px 5px rgba(0,0,0,0.5);
+            border-color: #00f3ff; color: #00f3ff;
         }
-        .keypad-del.pressed {
-            background: rgba(255, 0, 85, 0.2);
-            border-color: #ff0055;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-        }
-        
+        .keypad-btn:active::after { opacity: 1; }
+        .keypad-del { color: #ff0055; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.6; }
         .record-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }
         .input-flashing { animation: input-flash 0.2s ease-out; }
+        
+        @keyframes input-flash { 0% { border-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; } 100% { border-color: rgba(255,255,255,0.1); box-shadow: none; } }
     </style>
 </head>
 <body class="text-white pb-24">
@@ -108,6 +116,7 @@
         <div class="bg-blob bg-neon-blue w-96 h-96 bottom-0 -right-20 animation-delay-2000"></div>
     </div>
 
+    <!-- UI Elements -->
     <div id="toast-container"></div>
     <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-6 transform scale-95 transition-transform duration-300" id="confirm-box">
@@ -121,6 +130,7 @@
         </div>
     </div>
 
+    <!-- Auth -->
     <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-[#050511]">
         <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
             <div class="glass-panel w-full max-w-[420px] p-8 rounded-[2.5rem] border-t border-white/20 relative overflow-hidden animate-slide-up-modal mx-auto">
@@ -128,7 +138,7 @@
                 <div class="text-center mb-8">
                     <div class="w-24 h-24 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-neon-blue/20 mb-5 animate-float"><i class="fa-solid fa-robot text-5xl text-white"></i></div>
                     <h1 class="text-3xl font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-1">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.8</p>
+                    <p class="text-neon-blue text-xs tracking-[0.3em] font-medium opacity-80">版本更新 V3.9</p>
                 </div>
                 <div id="login-form" class="space-y-5">
                     <div class="relative group"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors text-lg"></i></div><input type="email" id="email" placeholder="電子郵件" class="glass-input w-full py-4 pl-12 pr-4 rounded-xl text-base placeholder-gray-500 appearance-none"></div>
@@ -145,6 +155,7 @@
         </div>
     </div>
 
+    <!-- Main App -->
     <div id="app-container" class="hidden opacity-0 transition-opacity duration-700">
         
         <div id="guest-banner" class="hidden bg-gradient-to-r from-neon-green/20 to-transparent border-b border-neon-green/30 text-neon-green px-4 py-2 text-xs font-bold flex items-center justify-center"><i class="fa-solid fa-eye mr-2"></i> 訪客模式：資料僅存於記憶體</div>
@@ -153,7 +164,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-lg"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.8 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V3.9 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -226,6 +237,7 @@
 
         </main>
 
+        <!-- FAB -->
         <div class="fixed bottom-24 right-6 z-40" id="fab-container">
             <button onclick="toggleFab()" id="fab-main" class="w-14 h-14 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple text-white shadow-[0_0_20px_rgba(0,243,255,0.4)] flex items-center justify-center text-2xl transition-transform duration-300 active:scale-90 z-50 relative border-2 border-white/20"><i class="fa-solid fa-plus transition-transform duration-300" id="fab-icon"></i></button>
             <div id="fab-menu" class="absolute bottom-16 right-0 flex flex-col items-end gap-3 transition-all duration-300 transform scale-0 opacity-0 origin-bottom-right pointer-events-none">
@@ -246,6 +258,7 @@
             </div>
         </div>
 
+        <!-- Entry Modal -->
         <div id="entry-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeEntry()"></div>
             <div class="absolute bottom-0 left-0 right-0 glass-panel rounded-t-[2.5rem] p-6 sm:p-8 transform translate-y-full transition-transform duration-300 max-w-3xl mx-auto border-t border-white/20 shadow-2xl flex flex-col max-h-[90vh]" id="modal-content">
@@ -264,6 +277,7 @@
             </div>
         </div>
 
+        <!-- Keypad -->
         <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-300 border-t border-white/20 pb-safe shadow-2xl">
             <div class="flex justify-between items-center px-6 py-3 bg-black/30 border-b border-white/5 backdrop-blur-xl">
                 <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Hines Input</span>
@@ -399,17 +413,34 @@
             if(isGuest) { showToast("訪客模式無法打卡", "info"); return; }
             try { await db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').set({ startTime: firebase.firestore.FieldValue.serverTimestamp() }); showToast("上班打卡成功", "success"); } catch(e) { showToast("打卡失敗", "error"); }
         }
+        
         async function endWork() {
             if(isGuest) return;
             try {
                 const docRef = db.collection('users').doc(currentUser.uid).collection('attendance').doc('current');
                 const doc = await docRef.get();
                 if(!doc.exists) return;
-                const start = doc.data().startTime.toDate(), end = new Date();
+                const start = doc.data().startTime.toDate();
+                const end = new Date();
+                
+                // Format times for display
+                const startStr = start.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
+                const endStr = end.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
+
                 const diffMs = end - start, diffMins = diffMs / 1000 / 60;
                 const blocks = Math.ceil(diffMins / 30);
                 const pay = blocks * 25, hours = (blocks * 0.5).toFixed(1);
-                const recordData = { type: 'attendance', date: `${end.getMonth()+1}/${end.getDate()}`, amount: pay, note: `工時: ${hours}小時`, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                
+                const recordData = { 
+                    type: 'attendance', 
+                    date: `${end.getMonth()+1}/${end.getDate()}`, 
+                    amount: pay, 
+                    note: `工時: ${hours}小時`, 
+                    clockIn: startStr,
+                    clockOut: endStr,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                };
+                
                 await db.collection('users').doc(currentUser.uid).collection('records').add(recordData);
                 await docRef.delete(); workStartTime = null; showToast(`下班！薪資 $${pay} 已記錄`, "success");
             } catch(e) { console.error(e); showToast("結算失敗", "error"); }
@@ -421,7 +452,6 @@
         function closeConfirm(res) { const m=document.getElementById('custom-confirm'), b=document.getElementById('confirm-box'); b.classList.remove('scale-100'); b.classList.add('scale-95'); m.classList.add('opacity-0'); setTimeout(()=>{m.classList.add('hidden'); if(res && confirmCallback) confirmCallback(); confirmCallback=null;},300); }
         document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
         
-        // Keypad Logic with Animation
         function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
         function closeKeypad() { document.getElementById('custom-keypad').classList.add('translate-y-full'); activeKeypadInput=null; }
         
@@ -429,15 +459,8 @@
             if(activeKeypadInput) { 
                 activeKeypadInput.value += v; 
                 activeKeypadInput.dispatchEvent(new Event('input'));
-                
-                // Visual Flash
-                if(btn) {
-                    btn.classList.add('pressed');
-                    setTimeout(() => btn.classList.remove('pressed'), 100);
-                }
-                // Haptic
+                if(btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 100); }
                 if(navigator.vibrate) navigator.vibrate(15);
-                // Input Field Flash
                 activeKeypadInput.parentElement.classList.add('input-flashing');
                 setTimeout(() => activeKeypadInput.parentElement.classList.remove('input-flashing'), 200);
             }
@@ -508,7 +531,7 @@
                     if(r.type === 'reels') val = Number(r.income);
                     if(r.type === 'kwuntong') {
                         val = Number(r.lower || 0);
-                        expense += Number(r.refund || 0); // Only counts if confirmed? No, log it as is.
+                        expense += Number(r.refund || 0); 
                     }
                     if(r.type === 'attendance') val = Number(r.amount);
                     income += val;
@@ -566,7 +589,13 @@
                     else extraAction = `<button onclick="event.stopPropagation(); confirmRefund('${r.id}')" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-500 hover:text-white transition-colors ml-2">確認退款</button>`;
                 }
             } else if (r.type === 'attendance') {
-                icon = 'fa-clock'; color = 'text-neon-green'; title = '薪資收入'; desc = r.note; money = `+$${r.amount}`;
+                icon = 'fa-clock'; color = 'text-neon-green'; title = '薪資收入'; 
+                if (r.clockIn && r.clockOut) {
+                    desc = `${r.clockIn} - ${r.clockOut} <span class="text-gray-400 ml-1">| ${r.note}</span>`;
+                } else {
+                    desc = r.note;
+                }
+                money = `+$${r.amount}`;
             } else {
                 icon = 'fa-cart-shopping'; color = 'text-neon-pink'; title = r.name; desc = r.source; money = `-$${r.amount}`;
             }
@@ -656,15 +685,7 @@
             modal.classList.remove('hidden'); setTimeout(() => content.classList.remove('translate-y-full'), 10);
         }
 
-        function editRecord(id) {
-            const record = records.find(r => r.id === id);
-            if (record) {
-                openEntry(record.type, '', record);
-            }
-        }
-
         function formatDateForInput(dateStr) {
-            // dateStr usually "M/D" -> convert to YYYY-MM-DD
             const parts = dateStr.split('/');
             if(parts.length === 2) {
                 const now = new Date();
@@ -730,3 +751,4 @@
     </script>
 </body>
 </html>
+
