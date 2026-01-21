@@ -96,21 +96,11 @@
         .keypad-btn:active::before { opacity: 1; }
         .keypad-del { color: #ff0055; }
 
-        /* Scrollable Type Switcher */
         #type-switcher {
-            display: flex;
-            overflow-x: auto;
-            gap: 16px;
-            padding-bottom: 8px;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
+            display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;
+            scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
         }
-        .type-tab { 
-            flex-shrink: 0;
-            scroll-snap-align: center;
-            opacity: 0.5; transition: all 0.3s; filter: grayscale(1); transform: scale(0.95); 
-            min-width: 70px;
-        }
+        .type-tab { flex-shrink: 0; scroll-snap-align: center; opacity: 0.5; transition: all 0.3s; filter: grayscale(1); transform: scale(0.95); min-width: 70px; }
         .type-tab.active { opacity: 1; filter: grayscale(0); transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
         
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 380px; pointer-events: none; }
@@ -157,7 +147,7 @@
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(188,19,254,0.3)] mb-4"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
                     <h1 class="text-2xl font-black tracking-wide">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.5 STABLE</p>
+                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.6 ATTENDANCE FIX</p>
                 </div>
                 <div id="login-form" class="space-y-4">
                     <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
@@ -184,7 +174,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-[0_0_15px_rgba(188,19,254,0.4)]"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.5 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.6 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -214,13 +204,10 @@
             </div>
         </div>
 
-        <!-- Entry Modal (Floating Center) -->
+        <!-- Entry Modal -->
         <div id="entry-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300" onclick="closeEntry()"></div>
-            
             <div class="relative w-full max-w-lg glass-panel rounded-[2rem] p-6 sm:p-8 transform scale-95 opacity-0 transition-all duration-300 shadow-2xl border border-white/10 flex flex-col max-h-[85vh]" id="modal-content">
-                
-                <!-- Scrollable Type Switcher (Fixed) -->
                 <div class="flex items-center mb-6 gap-2 pb-2 border-b border-white/10 w-full" id="type-switcher-container">
                     <div id="type-switcher">
                         <button onclick="switchEntryType('camel')" class="type-tab text-neon-blue flex flex-col items-center"><i class="fa-solid fa-building text-xl mb-1"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
@@ -229,23 +216,19 @@
                         <button onclick="switchEntryType('expense')" class="type-tab text-neon-pink flex flex-col items-center"><i class="fa-solid fa-cart-shopping text-xl mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
                     </div>
                 </div>
-
                 <div class="flex-1 overflow-y-auto no-scrollbar">
                     <h3 class="text-2xl font-black text-white mb-6 flex items-center justify-center gap-2 text-center" id="modal-title">新增記錄</h3>
                     <div id="modal-form-container" class="space-y-5"></div>
                 </div>
-
                 <div class="mt-6 flex flex-col gap-3 justify-center pt-4 border-t border-white/10">
                     <button id="modal-submit-btn" onclick="submitEntry()" class="w-full py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button>
                     <button id="modal-delete-btn" onclick="deleteFromModal()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold hidden hover:bg-red-500/20 transition-all active:scale-95 text-lg">刪除此記錄</button>
                 </div>
-                
-                <!-- Close Button -->
                 <button onclick="closeEntry()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
 
-        <!-- Haptic Keypad (Bottom Sheet) -->
+        <!-- Keypad -->
         <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-200 border-t border-white/20 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
             <div class="flex justify-between items-center px-6 py-2 bg-black/40 border-b border-white/5 backdrop-blur-xl">
                 <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">HINES TACTILE INPUT</span>
@@ -293,7 +276,6 @@
                     const dateParts = r.date.split('-');
                     if(dateParts.length >= 2) { year = dateParts[0]; month = dateParts[1]; }
                 }
-                
                 if(!groups[year]) groups[year] = {};
                 if(!groups[year][month]) groups[year][month] = [];
                 groups[year][month].push(r);
@@ -513,9 +495,7 @@
             const dateVal = document.getElementById('in-date').value;
             if (!dateVal) { showToast("請選擇日期", "error"); return; }
 
-            // Ensure YYYY-MM-DD
-            const dateObj = new Date(dateVal);
-            const displayDate = dateVal; // Use input value directly which is YYYY-MM-DD
+            const displayDate = dateVal; // Use raw YYYY-MM-DD string
 
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
             btn.disabled = true;
@@ -541,11 +521,9 @@
                     const ref = db.collection('users').doc(currentUser.uid).collection('records');
                     if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
                     showToast("已同步雲端", "success");
-                    // Force refresh trigger by creating a tiny delay to allow snapshot to propagate or manual refresh
-                    setTimeout(loadFirebaseData, 500); 
+                    setTimeout(loadFirebaseData, 500); // Force Refresh
                 }
                 closeEntry(); 
-                // Force switch view to current filter to ensure re-render
                 if(isGuest) switchView(currentFilter);
             } catch(e) {
                 console.error(e);
@@ -586,7 +564,9 @@
             chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['駱駝漆','Reels','觀塘','薪資'], datasets: [{ data: [s.camel, s.reels, s.kwuntong, s.attendance], backgroundColor: ['#00f3ff','#bc13fe','#facc15','#0aff00'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'75%', plugins: { legend: { position:'right', labels:{ usePointStyle:true, color:'white', font:{family:'"Noto Sans TC"'} } } } } });
         }
 
+        // --- Other Views ---
         function renderAttendance(container) {
+            // Updated to be simpler and directly show status from global state check
             container.innerHTML = `
                 <div class="glass-panel p-6 rounded-3xl w-full max-w-sm mx-auto border border-white/10 relative overflow-hidden text-center animate-slide-up">
                     <div class="absolute top-0 right-0 p-4 opacity-20"><i class="fa-solid fa-business-time text-6xl text-white"></i></div>
@@ -612,6 +592,9 @@
             `;
             const attRecords = records.filter(r => r.type === 'attendance').slice(0, 10);
             document.getElementById('attendance-list').innerHTML = attRecords.length ? attRecords.map(renderCard).join('') : `<div class="text-center text-xs text-gray-500">無記錄</div>`;
+            
+            // Force re-check status to update UI immediately
+            checkAttendanceStatus();
         }
 
         function renderSettings(container) {
@@ -650,7 +633,7 @@
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 records.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
                 
-                // Smart Reload: If on dashboard, update stats. If on list, refresh list.
+                // Smart Reload
                 if(currentFilter === 'attendance') renderAttendance(document.getElementById('content-area'));
                 else if(currentFilter === 'settings') renderSettings(document.getElementById('content-area'));
                 else if(currentFilter === 'dashboard') renderDashboard(document.getElementById('content-area'), calculateStats());
@@ -671,16 +654,29 @@
                 if (workStartTime) {
                     const diff = now - workStartTime;
                     const hrs = Math.floor(diff / 3600000), mins = Math.floor((diff % 3600000) / 60000), secs = Math.floor((diff % 60000) / 1000);
-                    document.getElementById('work-duration').innerText = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-                    document.getElementById('est-1h').innerText = new Date(now.getTime() + 3600000).toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
-                    document.getElementById('est-2h').innerText = new Date(now.getTime() + 7200000).toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
+                    const elDuration = document.getElementById('work-duration');
+                    if(elDuration) elDuration.innerText = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                    
+                    const oneHr = new Date(workStartTime.getTime() + 3600000);
+                    const twoHr = new Date(workStartTime.getTime() + 7200000);
+                    const el1 = document.getElementById('est-1h');
+                    const el2 = document.getElementById('est-2h');
+                    if(el1) el1.innerText = oneHr.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
+                    if(el2) el2.innerText = twoHr.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit'});
                 }
             }, 1000);
         }
         function checkAttendanceStatus() {
             if(isGuest) return;
             db.collection('users').doc(currentUser.uid).collection('attendance').doc('current').onSnapshot(doc => {
-                const statusText = document.getElementById('work-status-text'), btnIn = document.getElementById('btn-clock-in'), btnOut = document.getElementById('btn-clock-out'), activeInfo = document.getElementById('active-work-info');
+                const statusText = document.getElementById('work-status-text');
+                const btnIn = document.getElementById('btn-clock-in');
+                const btnOut = document.getElementById('btn-clock-out');
+                const activeInfo = document.getElementById('active-work-info');
+                
+                // Elements might be null if view switched
+                if (!statusText) return; 
+
                 if (doc.exists) {
                     workStartTime = doc.data().startTime.toDate();
                     statusText.innerText = `上班中 (${workStartTime.getHours()}:${String(workStartTime.getMinutes()).padStart(2,'0')} 開始)`;
@@ -704,8 +700,10 @@
                 const diffMs = end - start, diffMins = diffMs / 1000 / 60;
                 const blocks = Math.ceil(diffMins / 30);
                 const pay = blocks * 25, hours = (blocks * 0.5).toFixed(1);
+                
                 const sStr = start.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
                 const eStr = end.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
+
                 const recordData = { type: 'attendance', date: `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`, amount: pay, note: `工時: ${hours}小時`, clockIn: sStr, clockOut: eStr, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                 await db.collection('users').doc(currentUser.uid).collection('records').add(recordData);
                 await docRef.delete(); workStartTime = null; showToast(`下班！薪資 $${pay} 已記錄`, "success");
