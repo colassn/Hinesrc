@@ -94,7 +94,6 @@
             border-color: rgba(0, 243, 255, 0.3);
         }
         .keypad-btn:active::before { opacity: 1; }
-        
         .keypad-del { color: #ff0055; }
 
         /* Scrollable Type Switcher */
@@ -158,7 +157,7 @@
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(188,19,254,0.3)] mb-4"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
                     <h1 class="text-2xl font-black tracking-wide">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.4 STABLE</p>
+                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.5 STABLE</p>
                 </div>
                 <div id="login-form" class="space-y-4">
                     <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
@@ -185,7 +184,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-[0_0_15px_rgba(188,19,254,0.4)]"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.4 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.5 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -282,7 +281,6 @@
             } catch (e) { showToast("系統錯誤: " + e.message, "error"); }
         }
 
-        // --- Logic: Data Grouping & Stats ---
         function getGroupedData(filterType) {
             let filtered = [];
             if (filterType === 'dashboard' || filterType === 'income') filtered = records;
@@ -290,7 +288,6 @@
 
             const groups = {};
             filtered.forEach(r => {
-                // Robust date parsing
                 let year = '未知', month = '未知';
                 if (r.date) {
                     const dateParts = r.date.split('-');
@@ -314,8 +311,8 @@
                     if(r.type === 'reels') val = Number(r.income || 0);
                     if(r.type === 'kwuntong') {
                         val = Number(r.lower || 0); 
-                        exp += Number(r.refund || 0); // Refund implies expense paid out
-                        if (r.refunded) val += Number(r.refund || 0); // Confirmed refund means money back (Income)
+                        exp += Number(r.refund || 0); 
+                        if (r.refunded) val += Number(r.refund || 0); 
                     }
                     if(r.type === 'attendance') val = Number(r.amount || 0);
                     inc += val;
@@ -325,7 +322,6 @@
             return { inc, exp, net: inc - exp, sources };
         }
 
-        // --- Render Views ---
         function switchView(view) {
             currentFilter = view;
             document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('text-neon-blue', 'active'); el.classList.add('text-gray-500'); });
@@ -362,7 +358,6 @@
         function renderListView(container, type) {
             const groups = getGroupedData(type);
             const years = Object.keys(groups).sort().reverse();
-            // Get Current Date for auto-expand
             const now = new Date();
             const currentYear = String(now.getFullYear());
             const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
@@ -406,7 +401,6 @@
             container.innerHTML = html;
         }
 
-        // ... (Other functions updated with same rigorous structure) ...
         function getTitle(type) { const map = { 'camel': '駱駝漆記錄', 'reels': 'Reels 宣傳', 'kwuntong': '觀塘記錄', 'expense': '入貨/支出', 'income': '所有收入', 'attendance': '打卡記錄' }; return map[type] || '列表'; }
         
         function renderCard(r) {
@@ -451,7 +445,6 @@
             </div>`;
         }
 
-        // --- Core Functions ---
         function getIcon(t) { const map={camel:'fa-building',reels:'fa-instagram',kwuntong:'fa-shop',expense:'fa-cart-shopping',attendance:'fa-clock'}; return `<i class="fa-solid ${map[t]||'fa-list'}"></i>`; }
         function showToast(m, t="info") { const c=document.getElementById('toast-container'), e=document.createElement('div'); e.className=`toast-msg toast-${t}`; e.innerHTML=`<span><i class="fa-solid ${t==='success'?'fa-check':t==='error'?'fa-xmark':'fa-info'} text-lg"></i> ${m}</span>`; c.appendChild(e); setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(-20px)';setTimeout(()=>e.remove(),300);},3000); }
         let confirmCallback=null; function showConfirm(m, cb) { const md=document.getElementById('custom-confirm'), b=document.getElementById('confirm-box'); document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; md.classList.remove('hidden'); setTimeout(()=>{md.classList.remove('opacity-0');b.classList.remove('scale-90');b.classList.add('scale-100');},10); }
@@ -477,7 +470,6 @@
             }
 
             renderEntryForm(type, editData);
-            
             modal.classList.remove('hidden');
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
@@ -495,13 +487,13 @@
         }
 
         function renderEntryForm(type, editData) {
-            let dateVal = editData ? editData.date : new Date().toISOString().split('T')[0];
+            let dateVal = editData ? formatDateForInput(editData.date) : new Date().toISOString().split('T')[0];
             let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${dateVal}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors"></div>`;
             
-            if(type==='camel') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">上層</label><input id="in-upper" type="number" value="${editData?.upper||''}" onclick="openKeypad('in-upper')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">備註</label><input id="in-note" type="text" value="${editData?.note||''}" class="glass-input w-full p-4 rounded-xl"></div>`;
-            else if(type==='reels') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">收入</label><input id="in-income" type="number" value="${editData?.income||25}" onclick="openKeypad('in-income')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">內容</label><input id="in-content" type="text" value="${editData?.content||''}" class="glass-input w-full p-4 rounded-xl"></div>`;
-            else if(type==='kwuntong') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層收入 (計入收入)</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400">退款金額 (計入支出)</label><input id="in-refund" type="number" value="${editData?.refund||''}" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-4 rounded-xl text-red-300"></div>`;
-            else if(type==='expense') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">金額</label><input id="in-amount" type="number" value="${editData?.amount||''}" onclick="openKeypad('in-amount')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">項目</label><input id="in-name" type="text" value="${editData?.name||''}" class="glass-input w-full p-4 rounded-xl"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">來源</label><input id="in-source" type="text" value="${editData?.source||''}" class="glass-input w-full p-4 rounded-xl mb-2"><div id="modal-source-list" class="flex flex-wrap gap-2"></div></div>`;
+            if(type==='camel') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">上層</label><input id="in-upper" type="number" value="${editData?.upper||''}" onclick="openKeypad('in-upper')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue cursor-pointer"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">備註</label><input id="in-note" type="text" value="${editData?.note||''}" placeholder="選填" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue"></div>`;
+            else if(type==='reels') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">收入</label><input id="in-income" type="number" value="${editData?.income||25}" onclick="openKeypad('in-income')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple cursor-pointer"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">內容</label><input id="in-content" type="text" value="${editData?.content||''}" placeholder="例如：情人節宣傳" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-purple"></div>`;
+            else if(type==='kwuntong') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層收入 (計入收入)</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-orange-500 cursor-pointer"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400">退款金額 (計入支出)</label><input id="in-refund" type="number" value="${editData?.refund||''}" placeholder="如有" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-red-500 text-red-300 cursor-pointer"></div></div>`;
+            else if(type==='expense') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">金額</label><input id="in-amount" type="number" value="${editData?.amount||''}" onclick="openKeypad('in-amount')" readonly class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink cursor-pointer"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">項目</label><input id="in-name" type="text" value="${editData?.name||''}" placeholder="例如：公仔" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">來源</label><input id="in-source" type="text" value="${editData?.source||''}" placeholder="輸入來源" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-pink mb-3"><div class="flex justify-center gap-3" id="modal-source-list"></div></div>`;
             
             html += `</div>`;
             document.getElementById('modal-form-container').innerHTML = html;
@@ -521,11 +513,14 @@
             const dateVal = document.getElementById('in-date').value;
             if (!dateVal) { showToast("請選擇日期", "error"); return; }
 
-            // Loading State
+            // Ensure YYYY-MM-DD
+            const dateObj = new Date(dateVal);
+            const displayDate = dateVal; // Use input value directly which is YYYY-MM-DD
+
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
             btn.disabled = true;
 
-            let data = { type: activeType, date: dateVal }; // Use raw date value
+            let data = { type: activeType, date: displayDate };
             if(!activeEditId && !isGuest) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
             try {
@@ -546,8 +541,11 @@
                     const ref = db.collection('users').doc(currentUser.uid).collection('records');
                     if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
                     showToast("已同步雲端", "success");
+                    // Force refresh trigger by creating a tiny delay to allow snapshot to propagate or manual refresh
+                    setTimeout(loadFirebaseData, 500); 
                 }
                 closeEntry(); 
+                // Force switch view to current filter to ensure re-render
                 if(isGuest) switchView(currentFilter);
             } catch(e) {
                 console.error(e);
@@ -566,6 +564,7 @@
             });
         }
         function editRecord(id) { const r=records.find(i=>i.id===id); if(r) openEntry(r.type, '', r); }
+        function formatDateForInput(d) { return d; }
         async function confirmRefund(id) { if(isGuest)return; await db.collection('users').doc(currentUser.uid).collection('records').doc(id).update({refunded:true}); showToast("退款已確認","success"); }
 
         function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
@@ -587,7 +586,6 @@
             chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['駱駝漆','Reels','觀塘','薪資'], datasets: [{ data: [s.camel, s.reels, s.kwuntong, s.attendance], backgroundColor: ['#00f3ff','#bc13fe','#facc15','#0aff00'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'75%', plugins: { legend: { position:'right', labels:{ usePointStyle:true, color:'white', font:{family:'"Noto Sans TC"'} } } } } });
         }
 
-        // --- Other Views ---
         function renderAttendance(container) {
             container.innerHTML = `
                 <div class="glass-panel p-6 rounded-3xl w-full max-w-sm mx-auto border border-white/10 relative overflow-hidden text-center animate-slide-up">
@@ -651,7 +649,12 @@
             unsubscribe = ref.onSnapshot(snap => {
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 records.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                switchView(currentFilter); // Update view instantly
+                
+                // Smart Reload: If on dashboard, update stats. If on list, refresh list.
+                if(currentFilter === 'attendance') renderAttendance(document.getElementById('content-area'));
+                else if(currentFilter === 'settings') renderSettings(document.getElementById('content-area'));
+                else if(currentFilter === 'dashboard') renderDashboard(document.getElementById('content-area'), calculateStats());
+                else renderListView(document.getElementById('content-area'), currentFilter);
             });
         }
         function loadSettings() {
