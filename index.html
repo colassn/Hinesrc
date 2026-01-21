@@ -20,7 +20,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -33,7 +33,7 @@
                     colors: {
                         neon: { blue: '#00f3ff', purple: '#bc13fe', pink: '#ff0055', green: '#0aff00', yellow: '#facc15' },
                         glass: { 100: 'rgba(255, 255, 255, 0.05)', 200: 'rgba(255, 255, 255, 0.1)' },
-                        dark: { bg: '#050511', panel: '#0f1016' }
+                        dark: { bg: '#050511' }
                     },
                     animation: {
                         'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
@@ -63,7 +63,7 @@
         .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #050511; overflow: hidden; }
         .bg-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; animation: blob 15s infinite alternate; }
         
-        .glass-panel { background: rgba(18, 18, 28, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
+        .glass-panel { background: rgba(18, 18, 28, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
         .glass-input { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); color: white; transition: all 0.2s; }
         .glass-input:focus { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); background: rgba(0, 0, 0, 0.7); outline: none; }
         
@@ -101,26 +101,28 @@
         #type-switcher {
             display: flex;
             overflow-x: auto;
-            gap: 16px; /* spacing */
+            gap: 16px;
             padding-bottom: 8px;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
         }
         .type-tab { 
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
             scroll-snap-align: center;
             opacity: 0.5; transition: all 0.3s; filter: grayscale(1); transform: scale(0.95); 
-            min-width: 70px; /* Ensure minimum width */
+            min-width: 70px;
         }
         .type-tab.active { opacity: 1; filter: grayscale(0); transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
         
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 380px; pointer-events: none; }
         .toast-msg { background: rgba(20, 20, 30, 0.95); backdrop-filter: blur(12px); color: white; padding: 14px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.6); pointer-events: auto; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; animation: pop-in 0.3s; }
-        .toast-success i { color: #0aff00; } .toast-error i { color: #ff0055; }
+        .toast-success i { color: #0aff00; } .toast-error i { color: #ff0055; } .toast-info i { color: #00f3ff; }
         
-        details > summary { list-style: none; }
+        details > summary { list-style: none; outline: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] summary ~ div { animation: accordion-down 0.3s ease-out; }
+        .input-flashing { animation: input-flash 0.2s ease-out; }
+        @keyframes input-flash { 0% { border-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; } 100% { border-color: rgba(255,255,255,0.1); box-shadow: none; } }
     </style>
 </head>
 <body class="text-white pb-24 font-sans">
@@ -156,7 +158,7 @@
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(188,19,254,0.3)] mb-4"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
                     <h1 class="text-2xl font-black tracking-wide">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.3 SCROLL</p>
+                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V4.4 STABLE</p>
                 </div>
                 <div id="login-form" class="space-y-4">
                     <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
@@ -183,7 +185,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-[0_0_15px_rgba(188,19,254,0.4)]"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.3 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V4.4 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -267,7 +269,7 @@
         let chartInstance = null, unsubscribe = null, isLoginView = true;
         let activeKeypadInput = null, workStartTime = null, activeEditId = null;
         let customSources = ['淘寶', '拼多多', 'Carousell', 'Amazon', 'HKTVMall'];
-        let activeType = ''; // For modal
+        let activeType = ''; 
 
         function init() {
             try {
@@ -277,7 +279,7 @@
                     else if (!isGuest) { showAuth(); }
                 });
                 startClock();
-            } catch (e) { showToast("系統錯誤", "error"); }
+            } catch (e) { showToast("系統錯誤: " + e.message, "error"); }
         }
 
         // --- Logic: Data Grouping & Stats ---
@@ -288,9 +290,12 @@
 
             const groups = {};
             filtered.forEach(r => {
-                const dateParts = (r.date || "").split('-');
+                // Robust date parsing
                 let year = '未知', month = '未知';
-                if(dateParts.length >= 2) { year = dateParts[0]; month = dateParts[1]; }
+                if (r.date) {
+                    const dateParts = r.date.split('-');
+                    if(dateParts.length >= 2) { year = dateParts[0]; month = dateParts[1]; }
+                }
                 
                 if(!groups[year]) groups[year] = {};
                 if(!groups[year][month]) groups[year][month] = [];
@@ -302,17 +307,17 @@
         function calculateStats() {
             let inc = 0, exp = 0, sources = { camel: 0, reels: 0, kwuntong: 0, attendance: 0 };
             records.forEach(r => {
-                if(r.type === 'expense') exp += Number(r.amount);
+                if(r.type === 'expense') exp += Number(r.amount || 0);
                 else {
                     let val = 0;
-                    if(r.type === 'camel') val = Number(r.upper) + Number(r.lower);
-                    if(r.type === 'reels') val = Number(r.income);
+                    if(r.type === 'camel') val = Number(r.upper || 0) + Number(r.lower || 0);
+                    if(r.type === 'reels') val = Number(r.income || 0);
                     if(r.type === 'kwuntong') {
                         val = Number(r.lower || 0); 
-                        exp += Number(r.refund || 0); 
-                        if (r.refunded) val += Number(r.refund || 0); 
+                        exp += Number(r.refund || 0); // Refund implies expense paid out
+                        if (r.refunded) val += Number(r.refund || 0); // Confirmed refund means money back (Income)
                     }
-                    if(r.type === 'attendance') val = Number(r.amount);
+                    if(r.type === 'attendance') val = Number(r.amount || 0);
                     inc += val;
                     if(sources[r.type] !== undefined) sources[r.type] += val;
                 }
@@ -357,6 +362,11 @@
         function renderListView(container, type) {
             const groups = getGroupedData(type);
             const years = Object.keys(groups).sort().reverse();
+            // Get Current Date for auto-expand
+            const now = new Date();
+            const currentYear = String(now.getFullYear());
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
             let html = `
                 <div class="flex justify-between items-center mb-4 animate-fade-in">
                     <h2 class="text-xl font-bold flex items-center gap-2">${getIcon(type)} ${getTitle(type)}</h2>
@@ -368,18 +378,20 @@
             } else {
                 html += `<div class="space-y-4 pb-20">`;
                 years.forEach(year => {
+                    const isCurrentYear = year === currentYear;
                     html += `
-                    <details class="group" open>
-                        <summary class="flex items-center justify-between p-3 glass-panel rounded-xl mb-2 text-neon-blue font-bold tracking-wide">
+                    <details class="group" ${isCurrentYear ? 'open' : ''}>
+                        <summary class="flex items-center justify-between p-3 glass-panel rounded-xl mb-2 text-neon-blue font-bold tracking-wide select-none">
                             <span>${year} 年</span>
                             <i class="fa-solid fa-chevron-down rotate-icon transition-transform duration-300 group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-2 border-l-2 border-white/10 ml-3 space-y-4">`;
                             const months = Object.keys(groups[year]).sort((a,b)=>b-a);
                             months.forEach(month => {
+                                const isCurrentMonth = isCurrentYear && month === currentMonth;
                                 html += `
-                                <details class="group/inner" open>
-                                    <summary class="flex items-center gap-2 text-sm text-gray-400 font-medium mb-2 py-1 cursor-pointer hover:text-white transition-colors">
+                                <details class="group/inner" ${isCurrentMonth ? 'open' : ''}>
+                                    <summary class="flex items-center gap-2 text-sm text-gray-400 font-medium mb-2 py-1 cursor-pointer hover:text-white transition-colors select-none">
                                         <i class="fa-solid fa-calendar-days text-xs"></i> ${month} 月
                                     </summary>
                                     <div class="space-y-2 mb-4">
@@ -394,8 +406,7 @@
             container.innerHTML = html;
         }
 
-        // ... (Attendance, Settings, RenderCard, Core Functions) ...
-        // Re-injecting truncated functions from V4.2
+        // ... (Other functions updated with same rigorous structure) ...
         function getTitle(type) { const map = { 'camel': '駱駝漆記錄', 'reels': 'Reels 宣傳', 'kwuntong': '觀塘記錄', 'expense': '入貨/支出', 'income': '所有收入', 'attendance': '打卡記錄' }; return map[type] || '列表'; }
         
         function renderCard(r) {
@@ -440,6 +451,7 @@
             </div>`;
         }
 
+        // --- Core Functions ---
         function getIcon(t) { const map={camel:'fa-building',reels:'fa-instagram',kwuntong:'fa-shop',expense:'fa-cart-shopping',attendance:'fa-clock'}; return `<i class="fa-solid ${map[t]||'fa-list'}"></i>`; }
         function showToast(m, t="info") { const c=document.getElementById('toast-container'), e=document.createElement('div'); e.className=`toast-msg toast-${t}`; e.innerHTML=`<span><i class="fa-solid ${t==='success'?'fa-check':t==='error'?'fa-xmark':'fa-info'} text-lg"></i> ${m}</span>`; c.appendChild(e); setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(-20px)';setTimeout(()=>e.remove(),300);},3000); }
         let confirmCallback=null; function showConfirm(m, cb) { const md=document.getElementById('custom-confirm'), b=document.getElementById('confirm-box'); document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; md.classList.remove('hidden'); setTimeout(()=>{md.classList.remove('opacity-0');b.classList.remove('scale-90');b.classList.add('scale-100');},10); }
@@ -451,12 +463,11 @@
             const modal = document.getElementById('entry-modal');
             const content = document.getElementById('modal-content');
             
-            document.getElementById('modal-title').innerHTML = editData ? `<i class="fa-solid fa-pen"></i> 修改記錄` : `<i class="fa-solid fa-pen-to-square"></i> 新增記錄`;
+            document.getElementById('modal-title').innerHTML = editData ? `<i class="fa-solid fa-pen"></i> 修改記錄` : `<i class="fa-solid fa-pen-to-square"></i> ${title}`;
             document.getElementById('modal-submit-btn').innerText = editData ? "更新" : "儲存";
             const delBtn = document.getElementById('modal-delete-btn');
             if(editData) delBtn.classList.remove('hidden'); else delBtn.classList.add('hidden');
             
-            // Switcher Logic
             const switcher = document.getElementById('type-switcher-container');
             if(editData) switcher.classList.add('hidden'); else {
                 switcher.classList.remove('hidden');
@@ -484,12 +495,12 @@
         }
 
         function renderEntryForm(type, editData) {
-            let dateVal = editData ? formatDateForInput(editData.date) : new Date().toISOString().split('T')[0];
-            let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${dateVal}" class="glass-input w-full p-4 rounded-xl text-sm"></div>`;
+            let dateVal = editData ? editData.date : new Date().toISOString().split('T')[0];
+            let html = `<div class="grid grid-cols-1 gap-5"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-neon-blue font-bold rounded">日期</label><input id="in-date" type="date" value="${dateVal}" class="glass-input w-full p-4 rounded-xl text-sm focus:border-neon-blue transition-colors"></div>`;
             
             if(type==='camel') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">上層</label><input id="in-upper" type="number" value="${editData?.upper||''}" onclick="openKeypad('in-upper')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">備註</label><input id="in-note" type="text" value="${editData?.note||''}" class="glass-input w-full p-4 rounded-xl"></div>`;
             else if(type==='reels') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">收入</label><input id="in-income" type="number" value="${editData?.income||25}" onclick="openKeypad('in-income')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">內容</label><input id="in-content" type="text" value="${editData?.content||''}" class="glass-input w-full p-4 rounded-xl"></div>`;
-            else if(type==='kwuntong') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層收入</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400">退款金額</label><input id="in-refund" type="number" value="${editData?.refund||''}" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-4 rounded-xl text-red-300"></div>`;
+            else if(type==='kwuntong') html+=`<div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">下層收入 (計入收入)</label><input id="in-lower" type="number" value="${editData?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-red-400">退款金額 (計入支出)</label><input id="in-refund" type="number" value="${editData?.refund||''}" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-4 rounded-xl text-red-300"></div>`;
             else if(type==='expense') html+=`<div class="grid grid-cols-2 gap-4"><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">金額</label><input id="in-amount" type="number" value="${editData?.amount||''}" onclick="openKeypad('in-amount')" readonly class="glass-input w-full p-4 rounded-xl"></div><div class="relative group"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">項目</label><input id="in-name" type="text" value="${editData?.name||''}" class="glass-input w-full p-4 rounded-xl"></div></div><div class="relative group mt-4"><label class="absolute -top-2 left-3 bg-[#1d1d2b] px-1 text-[10px] text-gray-400">來源</label><input id="in-source" type="text" value="${editData?.source||''}" class="glass-input w-full p-4 rounded-xl mb-2"><div id="modal-source-list" class="flex flex-wrap gap-2"></div></div>`;
             
             html += `</div>`;
@@ -506,32 +517,45 @@
         }
         
         async function submitEntry() {
+            const btn = document.getElementById('modal-submit-btn');
             const dateVal = document.getElementById('in-date').value;
-            const dateObj = new Date(dateVal);
-            const displayDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+            if (!dateVal) { showToast("請選擇日期", "error"); return; }
 
-            let data = { type: activeType, date: displayDate };
+            // Loading State
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
+            btn.disabled = true;
+
+            let data = { type: activeType, date: dateVal }; // Use raw date value
             if(!activeEditId && !isGuest) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
-            if(activeType==='camel') { data.upper = document.getElementById('in-upper').value; data.lower = document.getElementById('in-lower').value; data.note = document.getElementById('in-note').value; }
-            else if(activeType==='reels') { data.income = document.getElementById('in-income').value; data.content = document.getElementById('in-content').value; }
-            else if(activeType==='kwuntong') { 
-                data.lower = document.getElementById('in-lower').value; 
-                data.refund = document.getElementById('in-refund').value;
-                if(!activeEditId) data.refunded = false; 
-            }
-            else if(activeType==='expense') { data.amount = document.getElementById('in-amount').value; data.name = document.getElementById('in-name').value; data.source = document.getElementById('in-source').value; }
+            try {
+                if(activeType==='camel') { data.upper = document.getElementById('in-upper').value; data.lower = document.getElementById('in-lower').value; data.note = document.getElementById('in-note').value; }
+                else if(activeType==='reels') { data.income = document.getElementById('in-income').value; data.content = document.getElementById('in-content').value; }
+                else if(activeType==='kwuntong') { 
+                    data.lower = document.getElementById('in-lower').value; 
+                    data.refund = document.getElementById('in-refund').value;
+                    if(!activeEditId) data.refunded = false; 
+                }
+                else if(activeType==='expense') { data.amount = document.getElementById('in-amount').value; data.name = document.getElementById('in-name').value; data.source = document.getElementById('in-source').value; }
 
-            if(isGuest) {
-                if(activeEditId) { const idx=records.findIndex(r=>r.id===activeEditId); if(idx!==-1) records[idx]={...records[idx],...data}; }
-                else { data.id='g_'+Date.now(); records.unshift(data); }
-                showToast("已儲存 (訪客)", "success");
-            } else {
-                const ref = db.collection('users').doc(currentUser.uid).collection('records');
-                if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
-                showToast("已同步雲端", "success");
+                if(isGuest) {
+                    if(activeEditId) { const idx=records.findIndex(r=>r.id===activeEditId); if(idx!==-1) records[idx]={...records[idx],...data}; }
+                    else { data.id='g_'+Date.now(); records.unshift(data); }
+                    showToast("已儲存 (訪客)", "success");
+                } else {
+                    const ref = db.collection('users').doc(currentUser.uid).collection('records');
+                    if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
+                    showToast("已同步雲端", "success");
+                }
+                closeEntry(); 
+                if(isGuest) switchView(currentFilter);
+            } catch(e) {
+                console.error(e);
+                showToast("儲存失敗: " + e.message, "error");
+            } finally {
+                btn.innerHTML = '確認儲存';
+                btn.disabled = false;
             }
-            closeEntry(); if(isGuest) switchView(currentFilter);
         }
 
         function deleteFromModal() { if(activeEditId) deleteEntry(activeEditId); closeEntry(); }
@@ -542,7 +566,6 @@
             });
         }
         function editRecord(id) { const r=records.find(i=>i.id===id); if(r) openEntry(r.type, '', r); }
-        function formatDateForInput(d) { return d; }
         async function confirmRefund(id) { if(isGuest)return; await db.collection('users').doc(currentUser.uid).collection('records').doc(id).update({refunded:true}); showToast("退款已確認","success"); }
 
         function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
@@ -552,6 +575,8 @@
                 activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); 
                 btn.classList.add('pressed'); setTimeout(()=>btn.classList.remove('pressed'),100); 
                 if(navigator.vibrate)navigator.vibrate(15); 
+                activeKeypadInput.parentElement.classList.add('input-flashing');
+                setTimeout(()=>activeKeypadInput.parentElement.classList.remove('input-flashing'),200);
             } 
         }
         function kpDel(btn) { if(activeKeypadInput){ activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); activeKeypadInput.dispatchEvent(new Event('input')); if(btn){btn.classList.add('pressed');setTimeout(()=>btn.classList.remove('pressed'),100);} if(navigator.vibrate)navigator.vibrate(20); } }
@@ -626,10 +651,7 @@
             unsubscribe = ref.onSnapshot(snap => {
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 records.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                if(currentFilter === 'attendance') renderAttendance(document.getElementById('content-area'));
-                else if(currentFilter === 'settings') renderSettings(document.getElementById('content-area'));
-                else if(currentFilter === 'dashboard') renderDashboard(document.getElementById('content-area'), calculateStats());
-                else renderListView(document.getElementById('content-area'), currentFilter);
+                switchView(currentFilter); // Update view instantly
             });
         }
         function loadSettings() {
@@ -679,11 +701,8 @@
                 const diffMs = end - start, diffMins = diffMs / 1000 / 60;
                 const blocks = Math.ceil(diffMins / 30);
                 const pay = blocks * 25, hours = (blocks * 0.5).toFixed(1);
-                
-                // Format times
                 const sStr = start.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
                 const eStr = end.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
-
                 const recordData = { type: 'attendance', date: `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`, amount: pay, note: `工時: ${hours}小時`, clockIn: sStr, clockOut: eStr, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                 await db.collection('users').doc(currentUser.uid).collection('records').add(recordData);
                 await docRef.delete(); workStartTime = null; showToast(`下班！薪資 $${pay} 已記錄`, "success");
