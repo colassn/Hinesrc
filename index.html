@@ -17,303 +17,236 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['"Noto Sans TC"', 'sans-serif'],
-                        mono: ['"Orbitron"', 'monospace']
-                    },
-                    colors: {
-                        neon: { blue: '#00f3ff', purple: '#bc13fe', pink: '#ff0055', green: '#0aff00', yellow: '#facc15' },
-                        glass: { 100: 'rgba(255, 255, 255, 0.05)', 200: 'rgba(255, 255, 255, 0.1)' },
-                        dark: { bg: '#050511' }
-                    },
-                    animation: {
-                        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'fade-in': 'fadeIn 0.3s ease-out forwards',
-                        'accordion-down': 'accordionDown 0.3s ease-out forwards',
-                        'slide-up': 'slideUp 0.3s ease-out forwards',
-                        'spin-slow': 'spin 3s linear infinite'
-                    },
-                    keyframes: {
-                        popIn: { from: { opacity: 0, transform: 'scale(0.9) translateY(20px)' }, to: { opacity: 1, transform: 'scale(1) translateY(0)' } },
-                        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-                        accordionDown: { from: { opacity: 0, transform: 'translateY(-10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
-                        slideUp: { from: { transform: 'translateY(20px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
-                        spin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } }
-                    }
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], mono: ['"Orbitron"', 'monospace'] },
+                    colors: { neon: { blue: '#00f3ff', purple: '#bc13fe', pink: '#ff0055', green: '#0aff00', yellow: '#facc15' } },
+                    zIndex: { '60': '60', '70': '70', '100': '100' }
                 }
             }
         }
     </script>
     <style>
-        body { 
-            background-color: #050511; color: #ffffff;
-            font-family: "Noto Sans TC", sans-serif;
-            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #050511; overflow: hidden; }
-        .bg-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; animation: blob 15s infinite alternate; }
-        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 100% { transform: translate(20px, 20px) scale(1.1); } }
+        body { background-color: #050511; color: #ffffff; font-family: "Noto Sans TC", sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
-        .glass-panel { background: rgba(18, 18, 28, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
-        .glass-input { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); color: white; transition: all 0.2s; }
-        .glass-input:focus { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); background: rgba(0, 0, 0, 0.7); outline: none; }
+        /* Glass Effect */
+        .glass-panel { background: rgba(20, 20, 35, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+        .glass-input { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.2); color: white; transition: 0.2s; }
+        .glass-input:focus { border-color: #00f3ff; background: rgba(0, 0, 0, 0.8); outline: none; }
         
+        /* Animations */
+        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden; }
+        .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3; }
+        
+        /* Interactive Elements */
+        .btn-action { cursor: pointer; position: relative; transition: all 0.1s; user-select: none; }
+        .btn-action:active { transform: scale(0.95); filter: brightness(1.2); }
+        
+        /* Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 3D Neon Keypad */
-        .keypad-btn {
-            background: linear-gradient(145deg, #1e1e2f, #151522);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #e0e0e0; font-family: "Orbitron", monospace; font-size: 1.5rem; font-weight: 700; 
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 5px 5px 10px #0b0b12, -2px -2px 6px #252538;
-            transition: all 0.05s ease;
-            position: relative; overflow: hidden;
-            touch-action: manipulation;
-        }
-        .keypad-btn:active, .keypad-btn.pressed {
-            transform: scale(0.95);
-            box-shadow: inset 5px 5px 10px #0b0b12, inset -5px -5px 10px #252538;
-            color: #00f3ff;
-            text-shadow: 0 0 10px #00f3ff;
-            border-color: rgba(0, 243, 255, 0.3);
-        }
-        .keypad-btn:active::before { opacity: 1; }
-        .keypad-del { color: #ff0055; }
+        /* Toast */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 350px; pointer-events: none; }
+        .toast-msg { background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; pointer-events: auto; display: flex; align-items: center; gap: 10px; animation: slideDown 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Keypad */
+        .keypad-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; font-family: 'Orbitron'; font-size: 1.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .keypad-btn:active { background: rgba(0,243,255,0.2); border-color: #00f3ff; transform: scale(0.95); }
 
-        /* Scrollable Type Switcher */
-        #type-switcher {
-            display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;
-            scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-        }
-        .type-tab { flex-shrink: 0; scroll-snap-align: center; opacity: 0.5; transition: all 0.3s; filter: grayscale(1); transform: scale(0.95); min-width: 70px; }
-        .type-tab.active { opacity: 1; filter: grayscale(0); transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
-        
-        #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 380px; pointer-events: none; }
-        .toast-msg { background: rgba(20, 20, 30, 0.95); backdrop-filter: blur(12px); color: white; padding: 14px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.6); pointer-events: auto; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; animation: pop-in 0.3s; }
-        .toast-success i { color: #0aff00; } .toast-error i { color: #ff0055; } .toast-info i { color: #00f3ff; }
-        
-        details > summary { list-style: none; outline: none; }
-        details > summary::-webkit-details-marker { display: none; }
-        details[open] summary ~ div { animation: accordion-down 0.3s ease-out; }
-        .input-flashing { animation: input-flash 0.2s ease-out; }
-        @keyframes input-flash { 0% { border-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; } 100% { border-color: rgba(255,255,255,0.1); box-shadow: none; } }
+        /* Tabs */
+        .type-tab { opacity: 0.5; filter: grayscale(1); transition: 0.3s; transform: scale(0.9); }
+        .type-tab.active { opacity: 1; filter: grayscale(0); transform: scale(1.05); }
+
+        details > summary { list-style: none; cursor: pointer; outline: none; }
+        details[open] summary ~ div { animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="text-white pb-24 font-sans">
 
+    <!-- Background -->
     <div class="bg-animation">
         <div class="bg-blob bg-neon-purple w-96 h-96 top-0 left-0"></div>
         <div class="bg-blob bg-neon-blue w-[30rem] h-[30rem] bottom-0 right-0"></div>
     </div>
 
-    <!-- UI Elements -->
+    <!-- Toast Notification -->
     <div id="toast-container"></div>
-    
-    <!-- Confirm Dialog -->
-    <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-6 opacity-0 transition-opacity duration-200">
-        <div class="glass-panel w-full max-w-xs rounded-3xl p-6 transform scale-90 transition-transform duration-200" id="confirm-box">
-            <div class="w-14 h-14 rounded-full bg-neon-pink/10 border border-neon-pink/30 flex items-center justify-center text-neon-pink mb-4 mx-auto shadow-[0_0_20px_rgba(255,0,85,0.2)]">
-                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-center mb-2">確認操作</h3>
-            <p class="text-gray-400 text-center text-sm mb-6" id="confirm-msg">...</p>
+
+    <!-- Confirm Dialog (Z-Index 100) -->
+    <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/90 flex items-center justify-center p-6">
+        <div class="glass-panel w-full max-w-xs rounded-2xl p-6 text-center transform transition-all">
+            <i class="fa-solid fa-circle-exclamation text-4xl text-neon-pink mb-4"></i>
+            <h3 class="text-lg font-bold mb-2">確認操作</h3>
+            <p class="text-gray-400 text-sm mb-6" id="confirm-msg">...</p>
             <div class="flex gap-3">
-                <button onclick="closeConfirm(false)" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition-colors">取消</button>
-                <button id="confirm-yes-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-neon-pink to-red-600 text-white font-bold shadow-lg shadow-red-900/50">確定</button>
+                <button onclick="closeConfirm(false)" class="flex-1 py-3 rounded-xl bg-white/10 btn-action">取消</button>
+                <button id="confirm-yes-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-neon-pink to-red-600 font-bold btn-action">確定</button>
             </div>
         </div>
     </div>
 
-    <!-- Auth -->
-    <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-[#050511]">
-        <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
-            <div class="glass-panel w-full max-w-[380px] p-8 rounded-[2.5rem] border-t border-white/20 relative mx-auto shadow-2xl animate-pop-in">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink"></div>
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(188,19,254,0.3)] mb-4"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
-                    <h1 class="text-2xl font-black tracking-wide">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V5.1 REPAIR</p>
-                </div>
-                <div id="login-form" class="space-y-4">
-                    <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
-                    <input type="password" id="password" placeholder="密碼" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
-                    <button onclick="handleLogin()" id="login-btn" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple rounded-xl font-bold text-white text-lg shadow-lg active:scale-95 transition-transform hover:shadow-[0_0_20px_rgba(0,243,255,0.4)]">進入系統</button>
-                </div>
-                <div class="mt-6 text-center text-sm text-gray-400">
-                    <span onclick="toggleMode()" class="cursor-pointer hover:text-white transition-colors">還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/30 pb-0.5">註冊</span></span>
-                </div>
-                <div class="mt-8 space-y-3">
-                     <button onclick="handleGoogleLogin()" class="w-full py-3 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">Google 登入</button>
-                    <button onclick="handleGuest()" class="w-full py-3 border border-white/20 text-gray-300 rounded-xl font-medium active:scale-95 transition-transform hover:bg-white/5 group"><i class="fa-solid fa-user-secret mr-2 group-hover:text-neon-green transition-colors"></i>訪客模式</button>
-                </div>
-                <div id="auth-loading" class="hidden mt-4 text-center">
-                    <i class="fa-solid fa-circle-notch fa-spin text-neon-blue text-2xl"></i>
-                    <p class="text-xs text-gray-500 mt-2">連接資料庫中...</p>
-                </div>
-            </div>
+    <!-- Auth Screen (Z-Index 50) -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050511] p-6 overflow-y-auto">
+        <div class="glass-panel w-full max-w-sm p-8 rounded-[2rem] text-center relative border-t border-white/20 shadow-2xl">
+            <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-lg mb-6"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
+            <h1 class="text-2xl font-black mb-1">騫記錄系統</h1>
+            <p class="text-neon-blue text-xs font-mono tracking-widest mb-8">V5.3 STABLE</p>
+            
+            <button onclick="handleGoogleLogin()" class="w-full py-4 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-3 mb-4 btn-action shadow-lg">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> Google 登入
+            </button>
+            <button onclick="handleGuest()" class="w-full py-4 border border-white/20 text-gray-300 rounded-xl font-medium btn-action hover:bg-white/5">
+                <i class="fa-solid fa-user-secret mr-2"></i> 訪客模式 (免登入)
+            </button>
+            <div id="auth-loading" class="hidden mt-4 text-xs text-neon-blue animate-pulse">正在連接資料庫...</div>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="app-container" class="hidden opacity-0 transition-opacity duration-500">
+    <!-- Main App (Z-Index 10) -->
+    <div id="app-container" class="hidden opacity-0 transition-opacity duration-500 relative z-10">
         
-        <div id="guest-banner" class="hidden bg-gradient-to-r from-neon-green/20 to-transparent border-b border-neon-green/30 text-neon-green px-4 py-2 text-xs font-bold text-center"><i class="fa-solid fa-eye mr-2"></i> 訪客模式：資料不保存</div>
+        <div id="guest-banner" class="hidden bg-neon-green/20 border-b border-neon-green/30 text-neon-green text-xs font-bold text-center py-2">訪客模式 - 資料僅暫存</div>
 
-        <header class="pt-6 px-6 pb-2">
+        <!-- Header -->
+        <header class="px-6 pt-6 pb-2">
             <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-[0_0_15px_rgba(188,19,254,0.4)]"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V5.1 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple p-[2px]"><img id="user-avatar" class="w-full h-full rounded-full bg-black"></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider">ONLINE</p><h2 class="text-lg font-bold leading-none" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
-                    <button onclick="handleLogout()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fa-solid fa-power-off"></i></button>
+                    <button onclick="refreshData()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-neon-blue btn-action"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button onclick="handleLogout()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-red-500 btn-action"><i class="fa-solid fa-power-off"></i></button>
                 </div>
             </div>
-            <!-- Dashboard Card (Visible only on non-attendance pages) -->
-            <div id="dashboard-card" class="glass-panel rounded-[2rem] p-6 relative overflow-hidden group border border-white/10 hover:border-white/20 transition-all">
-                <div class="absolute -right-12 -top-12 w-48 h-48 bg-neon-blue/10 blur-3xl rounded-full group-hover:bg-neon-purple/20 transition-colors duration-500"></div>
-                <div class="flex justify-between items-start mb-2"><div><p class="text-gray-400 text-xs font-medium mb-1 flex items-center gap-1"><i class="fa-solid fa-coins text-neon-blue"></i> 本月淨利潤</p><h1 class="text-4xl font-black text-white tracking-tight font-mono" id="net-profit">$0</h1></div><div class="text-right"><span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white border border-white/5 font-mono" id="profit-margin">0%</span></div></div>
-                <div class="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-4"><div id="profit-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-purple w-0 transition-all duration-1000"></div></div>
+            
+            <!-- Dashboard Stats -->
+            <div id="dashboard-header" class="glass-panel rounded-2xl p-5 border border-white/10 relative overflow-hidden mb-4">
+                <div class="flex justify-between items-end mb-2">
+                    <div><p class="text-xs text-gray-400 mb-1">本月淨利潤</p><h1 class="text-3xl font-black font-mono" id="net-profit">$0</h1></div>
+                    <div class="text-right"><span class="text-xs font-bold px-2 py-1 rounded bg-white/10" id="profit-margin">0%</span></div>
+                </div>
+                <div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="profit-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-purple w-0 transition-all duration-1000"></div></div>
             </div>
         </header>
 
-        <main class="px-4 pb-28 relative z-10 max-w-2xl mx-auto mt-4">
-            <div id="content-area"></div>
+        <!-- Content Area -->
+        <main class="px-4 pb-32" id="content-area">
+            <!-- Dynamic Content -->
         </main>
 
-        <!-- Bottom Nav -->
-        <div class="fixed bottom-0 w-full glass-panel h-20 z-30 rounded-t-[2rem] border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-            <div class="flex justify-around items-center h-full max-w-2xl mx-auto px-2 pb-2">
-                <button onclick="switchView('dashboard')" class="nav-item active flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-dashboard"><i class="fa-solid fa-chart-line text-lg mb-1"></i><span class="text-[10px] font-bold">概覽</span></button>
-                <button onclick="switchView('camel')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-camel"><i class="fa-solid fa-building text-lg mb-1"></i><span class="text-[10px] font-bold">駱駝</span></button>
-                <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1"></i><span class="text-[10px] font-bold">Reels</span></button>
-                <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1"></i><span class="text-[10px] font-bold">觀塘</span></button>
-                <button onclick="switchView('attendance')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-attendance"><i class="fa-solid fa-clock text-lg mb-1"></i><span class="text-[10px] font-bold">打卡</span></button>
-                <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-expense"><i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
-            </div>
+        <!-- Bottom Nav (Z-Index 40) -->
+        <div class="fixed bottom-0 w-full glass-panel h-20 z-40 rounded-t-3xl border-t border-white/10 flex justify-around items-center px-2 pb-2 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+            <button onclick="switchView('dashboard')" class="nav-item active flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-dashboard"><i class="fa-solid fa-chart-pie text-lg mb-1"></i><span class="text-[10px]">概覽</span></button>
+            <button onclick="switchView('camel')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-camel"><i class="fa-solid fa-building text-lg mb-1"></i><span class="text-[10px]">駱駝</span></button>
+            <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1"></i><span class="text-[10px]">Reels</span></button>
+            <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1"></i><span class="text-[10px]">觀塘</span></button>
+            <button onclick="switchView('attendance')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-attendance"><i class="fa-solid fa-clock text-lg mb-1"></i><span class="text-[10px]">打卡</span></button>
+            <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 btn-action" id="nav-expense"><i class="fa-solid fa-cart-shopping text-lg mb-1"></i><span class="text-[10px]">入貨</span></button>
         </div>
+    </div>
 
-        <!-- Entry Modal -->
-        <div id="entry-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300" onclick="closeEntry()"></div>
-            <div class="relative w-full max-w-lg glass-panel rounded-[2rem] p-6 sm:p-8 transform scale-95 opacity-0 transition-all duration-300 shadow-2xl border border-white/10 flex flex-col max-h-[85vh]" id="modal-content">
-                <div class="flex items-center mb-6 gap-2 pb-2 border-b border-white/10 w-full" id="type-switcher-container">
-                    <div id="type-switcher">
-                        <button onclick="switchEntryType('camel')" class="type-tab text-neon-blue flex flex-col items-center"><i class="fa-solid fa-building text-xl mb-1"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
-                        <button onclick="switchEntryType('reels')" class="type-tab text-neon-purple flex flex-col items-center"><i class="fa-brands fa-instagram text-xl mb-1"></i><span class="text-[10px] font-bold">Reels</span></button>
-                        <button onclick="switchEntryType('kwuntong')" class="type-tab text-neon-yellow flex flex-col items-center"><i class="fa-solid fa-shop text-xl mb-1"></i><span class="text-[10px] font-bold">觀塘</span></button>
-                        <button onclick="switchEntryType('expense')" class="type-tab text-neon-pink flex flex-col items-center"><i class="fa-solid fa-cart-shopping text-xl mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
-                    </div>
-                </div>
-                <div class="flex-1 overflow-y-auto no-scrollbar">
-                    <h3 class="text-2xl font-black text-white mb-6 flex items-center justify-center gap-2 text-center" id="modal-title">新增記錄</h3>
-                    <div id="modal-form-container" class="space-y-5"></div>
-                </div>
-                <div class="mt-6 flex flex-col gap-3 justify-center pt-4 border-t border-white/10">
-                    <button id="modal-submit-btn" onclick="submitEntry()" class="w-full py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button>
-                    <button id="modal-delete-btn" onclick="deleteFromModal()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold hidden hover:bg-red-500/20 transition-all active:scale-95 text-lg">刪除此記錄</button>
-                </div>
-                <button onclick="closeEntry()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <!-- Entry Modal (Z-Index 60) -->
+    <div id="entry-modal" class="fixed inset-0 z-60 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeEntry()"></div>
+        <div class="relative w-full max-w-lg glass-panel rounded-3xl p-6 border border-white/10 flex flex-col max-h-[85vh] shadow-2xl">
+            
+            <div class="flex items-center mb-4 gap-2 pb-2 border-b border-white/10 w-full overflow-x-auto no-scrollbar" id="type-switcher">
+                <button onclick="switchEntryType('camel')" class="type-tab flex flex-col items-center min-w-[60px] text-neon-blue btn-action"><i class="fa-solid fa-building text-xl mb-1"></i><span class="text-[10px]">駱駝</span></button>
+                <button onclick="switchEntryType('reels')" class="type-tab flex flex-col items-center min-w-[60px] text-neon-purple btn-action"><i class="fa-brands fa-instagram text-xl mb-1"></i><span class="text-[10px]">Reels</span></button>
+                <button onclick="switchEntryType('kwuntong')" class="type-tab flex flex-col items-center min-w-[60px] text-neon-yellow btn-action"><i class="fa-solid fa-shop text-xl mb-1"></i><span class="text-[10px]">觀塘</span></button>
+                <button onclick="switchEntryType('expense')" class="type-tab flex flex-col items-center min-w-[60px] text-neon-pink btn-action"><i class="fa-solid fa-cart-shopping text-xl mb-1"></i><span class="text-[10px]">入貨</span></button>
             </div>
+            
+            <h3 class="text-xl font-bold text-center mb-6" id="modal-title">新增記錄</h3>
+            <div id="modal-form-container" class="flex-1 overflow-y-auto no-scrollbar space-y-4"></div>
+            
+            <div class="mt-6 pt-4 border-t border-white/10 flex flex-col gap-3">
+                <button id="modal-submit-btn" onclick="submitEntry()" class="w-full py-4 bg-white text-black rounded-xl font-bold shadow-lg btn-action">確認儲存</button>
+                <button id="modal-delete-btn" onclick="deleteFromModal()" class="w-full py-3 bg-red-500/10 text-red-500 border border-red-500/30 rounded-xl font-bold hidden btn-action">刪除此記錄</button>
+            </div>
+            <button onclick="closeEntry()" class="absolute top-4 right-4 text-gray-400 p-2 btn-action"><i class="fa-solid fa-xmark"></i></button>
         </div>
+    </div>
 
-        <!-- Keypad -->
-        <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-200 border-t border-white/20 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-            <div class="flex justify-between items-center px-6 py-2 bg-black/40 border-b border-white/5 backdrop-blur-xl">
-                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">HINES TACTILE INPUT</span>
-                <button onclick="closeKeypad()" class="text-neon-blue font-bold px-4 py-1 rounded-full bg-neon-blue/10 hover:bg-neon-blue hover:text-black transition-colors text-sm"><i class="fa-solid fa-check"></i></button>
-            </div>
-            <div class="grid grid-cols-3 gap-3 p-4 bg-[#0a0a12]">
-                <button onclick="kpInput(1, this)" class="keypad-btn h-14">1</button><button onclick="kpInput(2, this)" class="keypad-btn h-14">2</button><button onclick="kpInput(3, this)" class="keypad-btn h-14">3</button>
-                <button onclick="kpInput(4, this)" class="keypad-btn h-14">4</button><button onclick="kpInput(5, this)" class="keypad-btn h-14">5</button><button onclick="kpInput(6, this)" class="keypad-btn h-14">6</button>
-                <button onclick="kpInput(7, this)" class="keypad-btn h-14">7</button><button onclick="kpInput(8, this)" class="keypad-btn h-14">8</button><button onclick="kpInput(9, this)" class="keypad-btn h-14">9</button>
-                <button onclick="kpInput('.', this)" class="keypad-btn h-14">.</button><button onclick="kpInput(0, this)" class="keypad-btn h-14">0</button><button onclick="kpDel(this)" class="keypad-btn h-14 keypad-del"><i class="fa-solid fa-delete-left"></i></button>
-            </div>
+    <!-- Keypad (Z-Index 70) -->
+    <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-70 transform translate-y-full transition-transform duration-200 border-t border-white/20 pb-safe shadow-2xl">
+        <div class="flex justify-between items-center px-4 py-2 border-b border-white/10"><span class="text-xs text-gray-500 font-bold font-mono">INPUT</span><button onclick="closeKeypad()" class="text-neon-blue font-bold px-4 py-1 btn-action">完成</button></div>
+        <div class="grid grid-cols-3 gap-2 p-3 bg-black/80">
+            <button onclick="kpInput(1)" class="keypad-btn h-14">1</button><button onclick="kpInput(2)" class="keypad-btn h-14">2</button><button onclick="kpInput(3)" class="keypad-btn h-14">3</button>
+            <button onclick="kpInput(4)" class="keypad-btn h-14">4</button><button onclick="kpInput(5)" class="keypad-btn h-14">5</button><button onclick="kpInput(6)" class="keypad-btn h-14">6</button>
+            <button onclick="kpInput(7)" class="keypad-btn h-14">7</button><button onclick="kpInput(8)" class="keypad-btn h-14">8</button><button onclick="kpInput(9)" class="keypad-btn h-14">9</button>
+            <button onclick="kpInput('.')" class="keypad-btn h-14">.</button><button onclick="kpInput(0)" class="keypad-btn h-14">0</button><button onclick="kpDel()" class="keypad-btn h-14 text-red-500"><i class="fa-solid fa-delete-left"></i></button>
         </div>
-
     </div>
 
     <script>
-        // --- 核心修復：使用手動配置 ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI",
-          authDomain: "hinesrc-25cee.firebaseapp.com",
-          projectId: "hinesrc-25cee",
-          storageBucket: "hinesrc-25cee.firebasestorage.app",
-          messagingSenderId: "873846921584",
-          appId: "1:873846921584:web:079586988dee370cc957b5",
-          measurementId: "G-TQRKF54G4F"
-        };
-        const appId = 'hinesrc-25cee'; // Use actual project ID for consistency
+        // --- 核心配置 ---
+        const firebaseConfig = { apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI", authDomain: "hinesrc-25cee.firebaseapp.com", projectId: "hinesrc-25cee", storageBucket: "hinesrc-25cee.firebasestorage.app", messagingSenderId: "873846921584", appId: "1:873846921584:web:079586988dee370cc957b5", measurementId: "G-TQRKF54G4F" };
+        const appId = 'hinesrc-25cee';
         
         let app, auth, db;
         let currentUser = null, records = [], isGuest = false, currentFilter = 'dashboard';
         let unsubscribe = null, activeKeypadInput = null, activeEditId = null, activeType = 'camel';
         let workStartTime = null;
         let customSources = ['淘寶', '拼多多', 'Carousell', 'Amazon', 'HKTVMall'];
+        let firebaseReady = false;
 
         function init() {
             try {
-                if (!firebase.apps.length) {
-                    app = firebase.initializeApp(firebaseConfig);
-                } else {
-                    app = firebase.app();
-                }
+                if (!firebase.apps.length) app = firebase.initializeApp(firebaseConfig);
+                else app = firebase.app();
                 auth = firebase.auth();
                 db = firebase.firestore();
-                
+                firebaseReady = true;
+
                 auth.onAuthStateChanged(user => {
-                    if (user && !isGuest) { 
-                        currentUser = user; 
-                        showApp(); 
-                    } else if (!isGuest) { 
-                        showAuth(); 
-                    }
+                    if (user && !isGuest) { currentUser = user; showApp(); } 
+                    else if (!isGuest) { showAuth(); }
                 });
                 startClock();
-            } catch (e) { console.error(e); showToast("系統初始化失敗: " + e.message, "error"); }
+            } catch (e) {
+                console.error(e);
+                showToast("資料庫連線失敗，請使用訪客模式", "error");
+            }
         }
 
-        // --- Data Logic ---
         function getUserRef() {
-            // Path: artifacts/{appId}/users/{userId}
+            if(!currentUser) return null;
             return db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid);
         }
 
+        // --- Data Loading ---
         function loadData() {
             if(unsubscribe) unsubscribe();
-            if(isGuest) return;
-            
-            showToast("正在同步資料...", "info");
+            if(isGuest || !getUserRef()) return;
+
+            showToast("正在同步...", "info");
             const ref = getUserRef().collection('records');
             unsubscribe = ref.onSnapshot(snap => {
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                records.sort((a,b) => {
-                    const da = new Date(a.date || 0).getTime();
-                    const db = new Date(b.date || 0).getTime();
-                    return db - da; // Descending
-                });
-                refreshCurrentView(); // Force UI Refresh
+                records.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+                refreshCurrentView();
             }, error => {
-                console.error("Data Load Error:", error);
-                showToast("讀取失敗: " + error.code, "error");
+                console.error(error);
+                showToast("同步失敗: " + error.code, "error");
             });
-            
+
             checkAttendanceStatus();
             getUserRef().get().then(doc => { if(doc.exists && doc.data().customSources) customSources = doc.data().customSources; });
+        }
+
+        function refreshData() {
+            if(isGuest) return showToast("訪客模式無法重整", "info");
+            loadData();
         }
 
         function refreshCurrentView() { switchView(currentFilter); }
@@ -321,6 +254,8 @@
         // --- View Logic ---
         function switchView(view) {
             currentFilter = view;
+            
+            // Nav Highlighting
             document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('text-neon-blue', 'active'); el.classList.add('text-gray-500'); });
             const activeNav = document.getElementById(`nav-${view}`);
             if(activeNav) { activeNav.classList.remove('text-gray-500'); activeNav.classList.add('text-neon-blue', 'active'); }
@@ -345,8 +280,7 @@
                     inc += Number(r.lower || 0);
                     exp += Number(r.refund || 0);
                     if(r.refunded) inc += Number(r.refund || 0);
-                }
-                else {
+                } else {
                     let val = 0;
                     if(r.type === 'camel') val = Number(r.upper || 0) + Number(r.lower || 0);
                     if(r.type === 'reels') val = Number(r.income || 0);
@@ -360,14 +294,27 @@
             document.getElementById('profit-bar').style.width = `${Math.max(0, margin)}%`;
         }
 
+        // --- Renders ---
         function renderDashboard(container) {
+            let inc = 0, exp = 0;
+            records.forEach(r => {
+                 if(r.type === 'expense') exp += Number(r.amount || 0);
+                 else if(r.type !== 'kwuntong' && r.type !== 'camel' && r.type !== 'reels' && r.type !== 'attendance') {} 
+                 else {
+                     if(r.type==='camel') inc += Number(r.upper)+Number(r.lower);
+                     if(r.type==='reels') inc += Number(r.income);
+                     if(r.type==='attendance') inc += Number(r.amount);
+                     if(r.type==='kwuntong') { inc += Number(r.lower); if(r.refunded) inc += Number(r.refund); exp += Number(r.refund); }
+                 }
+            });
+
             container.innerHTML = `
-                <div class="grid grid-cols-2 gap-3 mb-6 animate-slide-up">
-                   <div onclick="switchView('income')" class="glass-panel p-4 rounded-xl text-center"><p class="text-xs text-gray-400">總收入</p><p class="text-xl font-bold text-neon-green">收入統計</p></div>
-                   <div onclick="switchView('expense')" class="glass-panel p-4 rounded-xl text-center"><p class="text-xs text-gray-400">總入貨</p><p class="text-xl font-bold text-neon-pink">支出統計</p></div>
+                <div class="grid grid-cols-2 gap-3 mb-6 animate-fade-in">
+                   <div onclick="switchView('income')" class="glass-panel p-4 rounded-xl text-center btn-action"><p class="text-xs text-gray-400">總收入</p><p class="text-xl font-bold text-neon-green">$${inc}</p></div>
+                   <div onclick="switchView('expense')" class="glass-panel p-4 rounded-xl text-center btn-action"><p class="text-xs text-gray-400">總入貨</p><p class="text-xl font-bold text-neon-pink">$${exp}</p></div>
                 </div>
                 <h3 class="text-sm font-bold text-gray-400 mb-3 px-2">最新動態</h3>
-                <div class="space-y-3 pb-20">${records.slice(0, 5).map(renderCard).join('')}</div>
+                <div class="space-y-3 pb-20 animate-fade-in">${records.slice(0, 5).map(renderCard).join('')}</div>
             `;
         }
 
@@ -375,16 +322,18 @@
             let filtered = type === 'income' ? records.filter(r => r.type !== 'expense') : records.filter(r => r.type === type);
             const groups = {};
             filtered.forEach(r => {
-                const d = r.date || "9999-01-01"; const y = d.split('-')[0]; const m = d.split('-')[1];
+                const d = r.date || "2024-01-01"; 
+                const y = d.split('-')[0]; const m = d.split('-')[1];
                 if(!groups[y]) groups[y] = {}; if(!groups[y][m]) groups[y][m] = []; groups[y][m].push(r);
             });
-            let html = `<div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-white capitalize">${getTitle(type)}</h2><button onclick="openEntry('${type}')" class="bg-neon-blue/20 text-neon-blue px-4 py-1 rounded-full text-xs border border-neon-blue/50">+ 新增</button></div>`;
+            
+            let html = `<div class="flex justify-between items-center mb-4 animate-fade-in"><h2 class="text-xl font-bold text-white capitalize">${getTitle(type)}</h2><button onclick="openEntry('${type}')" class="bg-neon-blue/20 text-neon-blue px-4 py-1 rounded-full text-xs border border-neon-blue/50 btn-action">+ 新增</button></div>`;
             const years = Object.keys(groups).sort().reverse();
             if(years.length === 0) html += `<div class="text-center py-10 text-gray-500">暫無資料</div>`;
             else {
                 years.forEach(y => {
                     const isCurrentYear = y === new Date().getFullYear().toString();
-                    html += `<details ${isCurrentYear?'open':''} class="mb-4"><summary class="glass-panel p-3 rounded-xl font-bold text-neon-blue mb-2 flex justify-between"><span>${y} 年</span><i class="fa-solid fa-chevron-down"></i></summary><div class="pl-2">`;
+                    html += `<details ${isCurrentYear?'open':''} class="mb-4"><summary class="glass-panel p-3 rounded-xl font-bold text-neon-blue mb-2 flex justify-between btn-action"><span>${y} 年</span><i class="fa-solid fa-chevron-down"></i></summary><div class="pl-2">`;
                     Object.keys(groups[y]).sort().reverse().forEach(m => {
                         html += `<div class="mb-2"><p class="text-xs text-gray-400 mb-1 ml-1">${m} 月</p><div class="space-y-2 border-l-2 border-white/10 pl-2">${groups[y][m].map(renderCard).join('')}</div></div>`;
                     });
@@ -395,8 +344,8 @@
         }
 
         function renderAttendance(container) {
-            container.innerHTML = `
-                <div class="glass-panel p-6 rounded-3xl text-center mb-6 border border-white/10 relative overflow-hidden">
+             container.innerHTML = `
+                <div class="glass-panel p-6 rounded-3xl text-center mb-6 border border-white/10 relative overflow-hidden animate-fade-in">
                     <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-clock text-6xl"></i></div>
                     <p class="text-gray-400 text-sm mb-1 font-mono text-left" id="clock-date">--/--</p>
                     <h1 class="text-5xl font-black text-white font-mono tracking-wider text-left mb-2" id="clock-time">00:00</h1>
@@ -409,9 +358,9 @@
                     </div>
                     <p class="text-left text-xs font-bold text-gray-500 mt-4" id="work-status-text">讀取中...</p>
                 </div>
-                <div class="grid grid-cols-1 gap-4 max-w-xs mx-auto mb-8">
-                    <button onclick="startWork()" id="btn-clock-in" class="py-4 bg-gradient-to-r from-neon-green to-emerald-600 rounded-xl font-black text-white text-lg shadow-lg active:scale-95 hidden">上班打卡</button>
-                    <button onclick="endWork()" id="btn-clock-out" class="py-4 bg-gradient-to-r from-neon-pink to-red-600 rounded-xl font-black text-white text-lg shadow-lg active:scale-95 hidden">下班結算</button>
+                <div class="grid grid-cols-1 gap-4 max-w-xs mx-auto mb-8 animate-fade-in">
+                    <button onclick="startWork()" id="btn-clock-in" class="py-4 bg-gradient-to-r from-neon-green to-emerald-600 rounded-xl font-black text-white text-lg shadow-lg btn-action hidden">上班打卡</button>
+                    <button onclick="endWork()" id="btn-clock-out" class="py-4 bg-gradient-to-r from-neon-pink to-red-600 rounded-xl font-black text-white text-lg shadow-lg btn-action hidden">下班結算</button>
                 </div>
                 <h3 class="text-sm font-bold text-gray-400 mb-3 px-2">最近打卡</h3>
                 <div class="space-y-2 pb-20">${records.filter(r => r.type === 'attendance').slice(0, 10).map(renderCard).join('')}</div>
@@ -419,7 +368,32 @@
             checkAttendanceStatus();
         }
 
-        // --- Modals & Actions ---
+        function renderSettings(container) {
+             container.innerHTML = `
+                <div class="glass-panel p-6 rounded-2xl animate-fade-in">
+                    <h3 class="text-neon-blue font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-list"></i> 自定義入貨來源</h3>
+                    <div id="source-list" class="flex flex-wrap gap-2 mb-4"></div>
+                    <div class="flex gap-2">
+                        <input id="new-source-input" type="text" placeholder="新增來源" class="glass-input flex-1 p-3 rounded-xl text-sm">
+                        <button onclick="addSource()" class="px-4 bg-neon-blue/20 text-neon-blue rounded-xl btn-action"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            `;
+            renderSourceList();
+        }
+
+        // --- Handlers ---
+        function handleGoogleLogin() { 
+            if(!firebaseReady) return showToast("資料庫未連接", "error");
+            document.getElementById('auth-loading').classList.remove('hidden');
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => {
+                document.getElementById('auth-loading').classList.add('hidden');
+                showToast(e.message, 'error');
+            });
+        }
+        function handleGuest() { isGuest = true; currentUser = {uid:'guest',displayName:'訪客'}; records=[]; showApp(); }
+        function handleLogout() { auth.signOut(); location.reload(); }
+
         function openEntry(type, record=null) {
             activeType = type; activeEditId = record?.id;
             const modal = document.getElementById('entry-modal');
@@ -428,21 +402,14 @@
             document.getElementById('modal-submit-btn').innerText = record ? "更新" : "儲存";
             document.getElementById('modal-delete-btn').classList.toggle('hidden', !record);
             
-            const switcher = document.getElementById('type-switcher-container');
+            const switcher = document.getElementById('type-switcher');
             if(record) switcher.classList.add('hidden'); else {
                 switcher.classList.remove('hidden');
                 document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
-                const btnIndex = {camel:0, reels:1, kwuntong:2, expense:3}[type];
-                if(btnIndex!==undefined) document.getElementById('type-switcher').children[btnIndex].classList.add('active');
             }
 
             renderEntryForm(type, record);
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                const content = document.getElementById('modal-content');
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
         }
 
         function switchEntryType(type) {
@@ -450,8 +417,6 @@
             activeType = type;
             renderEntryForm(type, null);
             document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
-            const btnIndex = {camel:0, reels:1, kwuntong:2, expense:3}[type];
-            if(btnIndex!==undefined) document.getElementById('type-switcher').children[btnIndex].classList.add('active');
         }
 
         function renderEntryForm(type, data) {
@@ -459,19 +424,12 @@
             let today = new Date().toISOString().split('T')[0];
             let dateVal = data ? data.date : today;
             let html = `<div class="mb-4"><label class="text-xs text-gray-400 ml-1">日期</label><input id="in-date" type="date" value="${dateVal}" class="glass-input w-full p-3 rounded-xl mt-1"></div>`;
-            if(type==='camel') html += `<div class="flex gap-3 mb-3"><div><label class="text-xs text-gray-400">上層</label><input id="in-upper" type="number" value="${data?.upper||''}" onclick="openKeypad('in-upper')" readonly class="glass-input w-full p-3 rounded-xl"></div><div><label class="text-xs text-gray-400">下層</label><input id="in-lower" type="number" value="${data?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-3 rounded-xl"></div></div><div class="mb-3"><label class="text-xs text-gray-400">備註</label><input id="in-note" type="text" value="${data?.note||''}" class="glass-input w-full p-3 rounded-xl"></div>`;
-            else if(type==='reels') html += `<div class="mb-3"><label class="text-xs text-gray-400">收入</label><input id="in-income" type="number" value="${data?.income||25}" onclick="openKeypad('in-income')" readonly class="glass-input w-full p-3 rounded-xl"></div><div class="mb-3"><label class="text-xs text-gray-400">內容</label><input id="in-content" type="text" value="${data?.content||''}" class="glass-input w-full p-3 rounded-xl"></div>`;
-            else if(type==='kwuntong') html += `<div class="mb-3"><label class="text-xs text-gray-400">下層收入</label><input id="in-lower" type="number" value="${data?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-3 rounded-xl text-neon-yellow"></div><div class="mb-3"><label class="text-xs text-gray-400">退款金額</label><input id="in-refund" type="number" value="${data?.refund||''}" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-3 rounded-xl text-red-400"></div>`;
-            else if(type==='expense') html += `<div class="flex gap-3 mb-3"><div><label class="text-xs text-gray-400">金額</label><input id="in-amount" type="number" value="${data?.amount||''}" onclick="openKeypad('in-amount')" readonly class="glass-input w-full p-3 rounded-xl text-neon-pink"></div><div><label class="text-xs text-gray-400">項目</label><input id="in-name" type="text" value="${data?.name||''}" class="glass-input w-full p-3 rounded-xl"></div></div><div class="mb-3"><label class="text-xs text-gray-400">來源</label><input id="in-source" type="text" value="${data?.source||''}" class="glass-input w-full p-3 rounded-xl mb-2"><div class="flex gap-2 flex-wrap">${customSources.map(s=>`<button onclick="document.getElementById('in-source').value='${s}'" class="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-full">${s}</button>`).join('')}</div></div>`;
+            
+            if(type==='camel') html += `<div class="flex gap-3 mb-3"><div><label class="text-xs text-gray-400">上層</label><input id="in-upper" type="number" value="${data?.upper||''}" onclick="openKeypad('in-upper')" readonly class="glass-input w-full p-3 rounded-xl btn-action"></div><div><label class="text-xs text-gray-400">下層</label><input id="in-lower" type="number" value="${data?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-3 rounded-xl btn-action"></div></div><div class="mb-3"><label class="text-xs text-gray-400">備註</label><input id="in-note" type="text" value="${data?.note||''}" class="glass-input w-full p-3 rounded-xl"></div>`;
+            else if(type==='reels') html += `<div class="mb-3"><label class="text-xs text-gray-400">收入</label><input id="in-income" type="number" value="${data?.income||25}" onclick="openKeypad('in-income')" readonly class="glass-input w-full p-3 rounded-xl btn-action"></div><div class="mb-3"><label class="text-xs text-gray-400">內容</label><input id="in-content" type="text" value="${data?.content||''}" class="glass-input w-full p-3 rounded-xl"></div>`;
+            else if(type==='kwuntong') html += `<div class="mb-3"><label class="text-xs text-gray-400">下層收入</label><input id="in-lower" type="number" value="${data?.lower||''}" onclick="openKeypad('in-lower')" readonly class="glass-input w-full p-3 rounded-xl text-neon-yellow btn-action"></div><div class="mb-3"><label class="text-xs text-gray-400">退款金額</label><input id="in-refund" type="number" value="${data?.refund||''}" onclick="openKeypad('in-refund')" readonly class="glass-input w-full p-3 rounded-xl text-red-400 btn-action"></div>`;
+            else if(type==='expense') html += `<div class="flex gap-3 mb-3"><div><label class="text-xs text-gray-400">金額</label><input id="in-amount" type="number" value="${data?.amount||''}" onclick="openKeypad('in-amount')" readonly class="glass-input w-full p-3 rounded-xl text-neon-pink btn-action"></div><div><label class="text-xs text-gray-400">項目</label><input id="in-name" type="text" value="${data?.name||''}" class="glass-input w-full p-3 rounded-xl"></div></div><div class="mb-3"><label class="text-xs text-gray-400">來源</label><input id="in-source" type="text" value="${data?.source||''}" class="glass-input w-full p-3 rounded-xl mb-2"><div class="flex gap-2 flex-wrap">${customSources.map(s=>`<button onclick="document.getElementById('in-source').value='${s}'" class="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-full btn-action">${s}</button>`).join('')}</div></div>`;
             container.innerHTML = html;
-        }
-
-        function closeEntry() { 
-            const content = document.getElementById('modal-content');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(()=>document.getElementById('entry-modal').classList.add('hidden'), 300); 
-            closeKeypad(); activeEditId=null; 
         }
 
         async function submitEntry() {
@@ -482,6 +440,7 @@
             let data = { type: activeType, date: dateVal };
             if(!activeEditId && !isGuest) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
+            // Populate data
             if(activeType==='camel') { data.upper = document.getElementById('in-upper').value; data.lower = document.getElementById('in-lower').value; data.note = document.getElementById('in-note').value; }
             else if(activeType==='reels') { data.income = document.getElementById('in-income').value; data.content = document.getElementById('in-content').value; }
             else if(activeType==='kwuntong') { data.lower = document.getElementById('in-lower').value; data.refund = document.getElementById('in-refund').value; if(!activeEditId) data.refunded = false; }
@@ -497,8 +456,15 @@
                     if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
                     showToast("已同步雲端", "success");
                 }
-                closeEntry(); refreshCurrentView();
-            } catch(e) { showToast("失敗: "+e.message, "error"); } finally { btn.innerHTML = '確認儲存'; btn.disabled = false; }
+                closeEntry(); 
+                refreshCurrentView();
+            } catch(e) {
+                console.error(e);
+                showToast("儲存失敗: " + e.message, "error");
+            } finally {
+                btn.innerHTML = '確認儲存';
+                btn.disabled = false;
+            }
         }
 
         function deleteFromModal() { if(activeEditId) deleteEntry(activeEditId); closeEntry(); }
@@ -511,67 +477,85 @@
         function editRecord(id) { const r=records.find(i=>i.id===id); if(r) openEntry(r.type, '', r); }
         async function confirmRefund(id) { if(isGuest)return; await getUserRef().collection('records').doc(id).update({refunded:true}); showToast("退款已確認","success"); }
 
-        // --- Auth & Core ---
-        function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
-        function showApp() { 
-            document.getElementById('user-name').innerText = currentUser.displayName || "User";
-            document.getElementById('user-avatar').src = currentUser.photoURL || "";
-            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app-container').classList.remove('hidden');
-            setTimeout(()=>document.getElementById('app-container').classList.add('opacity-100'),100);
-            if(isGuest) document.getElementById('guest-banner').classList.remove('hidden'); else loadData();
-            refreshCurrentView();
-        }
-        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>showToast(e.message,'error')); }
-        function handleGuest() { isGuest=true; currentUser={uid:'guest',displayName:'訪客'}; records=[]; showApp(); }
-        function handleLogout() { auth.signOut(); location.reload(); }
-        function handleLogin() { 
-            const e=document.getElementById('email').value, p=document.getElementById('password').value;
-            if(!e||!p) return showToast("請輸入完整資訊","error");
-            if(isLoginView) auth.signInWithEmailAndPassword(e,p).catch(err=>showToast(err.message,"error")); else auth.createUserWithEmailAndPassword(e,p).then(()=>showToast("註冊成功","success")).catch(err=>showToast(err.message,"error"));
-        }
-        function toggleMode() { isLoginView=!isLoginView; const b=document.getElementById('login-btn'); b.innerText=isLoginView?"進入系統":"立即註冊"; }
+        function closeEntry() { document.getElementById('entry-modal').classList.add('hidden'); closeKeypad(); activeEditId=null; }
 
-        // --- Helpers ---
-        function getTitle(t) { const map = { 'camel': '駱駝漆', 'reels': 'Reels', 'kwuntong': '觀塘', 'expense': '入貨', 'income': '收入', 'attendance': '打卡' }; return map[t] || '列表'; }
-        function renderCard(r) {
-            let title = r.type;
-            if(r.type==='camel') title = '駱駝漆'; if(r.type==='reels') title = r.content || 'Reels'; if(r.type==='kwuntong') title = '觀塘廣場'; if(r.type==='expense') title = r.name || '入貨'; if(r.type==='attendance') title = '薪資';
-            return `<div class="glass-panel p-3 rounded-xl flex justify-between mb-2 cursor-pointer" onclick="editRecord('${r.id}')"><div><h4 class="font-bold text-sm">${title}</h4><p class="text-xs text-gray-400">${r.date}</p></div><div class="text-right"><i class="fa-solid fa-chevron-right text-xs"></i></div></div>`;
-        }
-        function showToast(m, t) { const el=document.createElement('div'); el.className=`toast-msg border-${t==='error'?'red':'green'}-500`; el.innerHTML=`<span>${m}</span>`; document.getElementById('toast-container').appendChild(el); setTimeout(()=>el.remove(),3000); }
-        let confirmCallback=null; function showConfirm(m, cb) { document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
-        function closeConfirm(r) { document.getElementById('custom-confirm').classList.add('hidden'); if(r && confirmCallback) confirmCallback(); confirmCallback=null; }
-        document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
-
-        // Keypad
-        function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
-        function closeKeypad() { document.getElementById('custom-keypad').classList.add('translate-y-full'); activeKeypadInput=null; }
-        function kpInput(v, btn) { if(activeKeypadInput){ activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); if(btn){btn.classList.add('pressed');setTimeout(()=>btn.classList.remove('pressed'),100);} if(navigator.vibrate)navigator.vibrate(15); } }
-        function kpDel(btn) { if(activeKeypadInput){ activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); activeKeypadInput.dispatchEvent(new Event('input')); } }
-
-        // Clock & Att
-        function startClock() { setInterval(()=>{ const d=new Date(); document.getElementById('clock-time').innerText=d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('clock-date').innerText=`${d.getMonth()+1}/${d.getDate()}`; if(workStartTime){ const diff=d-workStartTime; const hrs=Math.floor(diff/3600000); const mins=Math.floor((diff%3600000)/60000); const secs=Math.floor((diff%60000)/1000); document.getElementById('work-duration').innerText=`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; document.getElementById('est-1h').innerText=new Date(d.getTime()+3600000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('est-2h').innerText=new Date(d.getTime()+7200000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); } },1000); }
+        // --- Attendance & Utils ---
         function checkAttendanceStatus() {
-            if(isGuest) return;
+            if(isGuest || !getUserRef()) return;
             getUserRef().collection('attendance').doc('current').onSnapshot(doc => {
-                const btnIn=document.getElementById('btn-clock-in'), btnOut=document.getElementById('btn-clock-out'), status=document.getElementById('work-status-text'), info=document.getElementById('active-work-info');
+                const btnIn = document.getElementById('btn-clock-in');
+                const btnOut = document.getElementById('btn-clock-out');
+                const status = document.getElementById('work-status-text');
+                const info = document.getElementById('active-work-info');
                 if(!btnIn) return;
-                if(doc.exists) { workStartTime=doc.data().startTime.toDate(); btnIn.classList.add('hidden'); btnOut.classList.remove('hidden'); info.classList.remove('hidden'); status.innerText="工作中..."; status.classList.add('text-neon-green'); }
-                else { workStartTime=null; btnIn.classList.remove('hidden'); btnOut.classList.add('hidden'); info.classList.add('hidden'); status.innerText="準備就緒"; status.classList.remove('text-neon-green'); }
+                
+                if(doc.exists) {
+                    workStartTime = doc.data().startTime.toDate();
+                    btnIn.classList.add('hidden'); btnOut.classList.remove('hidden'); info.classList.remove('hidden');
+                    status.innerText = "工作中..."; status.classList.add('text-neon-green');
+                } else {
+                    workStartTime = null;
+                    btnIn.classList.remove('hidden'); btnOut.classList.add('hidden'); info.classList.add('hidden');
+                    status.innerText = "準備就緒"; status.classList.remove('text-neon-green');
+                }
             });
         }
         async function startWork() { if(isGuest) { showToast("訪客不可用","info"); return; } await getUserRef().collection('attendance').doc('current').set({startTime: firebase.firestore.FieldValue.serverTimestamp()}); showToast("打卡成功","success"); }
         async function endWork() {
             if(isGuest) return;
-            const ref=getUserRef().collection('attendance').doc('current'); const snap=await ref.get();
+            const ref = getUserRef().collection('attendance').doc('current');
+            const snap = await ref.get();
             if(snap.exists) {
-                const start=snap.data().startTime.toDate(), now=new Date();
-                const diff=(now-start)/1000/60; const blocks=Math.ceil(diff/30); const pay=blocks*25; const hours=(blocks*0.5).toFixed(1);
-                await getUserRef().collection('records').add({ type:'attendance', date:now.toISOString().split('T')[0], amount:pay, clockIn:start.toLocaleTimeString(), clockOut:now.toLocaleTimeString(), note:`工時: ${hours}小時`, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-                await ref.delete(); showToast(`薪資 $${pay} 已入帳`,'success');
+                const start = snap.data().startTime.toDate(), now = new Date();
+                const diff = (now - start) / 1000 / 60; 
+                const blocks = Math.ceil(diff / 30);
+                const pay = blocks * 25;
+                const hours = (blocks * 0.5).toFixed(1);
+                
+                const sStr = start.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
+                const eStr = now.toLocaleTimeString('en-US', {hour12:false,hour:'2-digit',minute:'2-digit'});
+
+                await getUserRef().collection('records').add({
+                    type: 'attendance', date: now.toISOString().split('T')[0], amount: pay,
+                    clockIn: sStr, clockOut: eStr, note: `工時: ${hours}小時`,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await ref.delete(); workStartTime = null; showToast(`薪資 $${pay} 已入帳`, 'success');
             }
         }
         
+        function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
+        function closeKeypad() { document.getElementById('custom-keypad').classList.add('translate-y-full'); activeKeypadInput=null; }
+        function kpInput(v) { if(activeKeypadInput) { activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); }}
+        function kpDel() { if(activeKeypadInput) activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); }
+        function showToast(m,t) { const e=document.createElement('div'); e.className=`toast-msg border-${t==='error'?'red':'green'}-500`; e.innerHTML=`<span>${m}</span>`; document.getElementById('toast-container').appendChild(e); setTimeout(()=>e.remove(),3000); }
+        let confirmCallback=null; function showConfirm(m, cb) { document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
+        function closeConfirm(r) { document.getElementById('custom-confirm').classList.add('hidden'); if(r && confirmCallback) confirmCallback(); confirmCallback=null; }
+        document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
+        function startClock() { setInterval(()=>{ const d=new Date(); document.getElementById('clock-time').innerText=d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('clock-date').innerText=`${d.getMonth()+1}/${d.getDate()}`; if(workStartTime){ const diff=d-workStartTime; const hrs=Math.floor(diff/3600000); const mins=Math.floor((diff%3600000)/60000); const secs=Math.floor((diff%60000)/1000); document.getElementById('work-duration').innerText=`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; document.getElementById('est-1h').innerText=new Date(d.getTime()+3600000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('est-2h').innerText=new Date(d.getTime()+7200000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); } },1000); }
+        function getTitle(t) { const map = { 'camel': '駱駝漆', 'reels': 'Reels', 'kwuntong': '觀塘', 'expense': '入貨', 'income': '收入', 'attendance': '打卡' }; return map[t] || '列表'; }
+        function renderCard(r) { 
+            let title = r.type === 'expense' ? (r.name||'入貨') : (r.type==='camel'?'駱駝漆':(r.type==='kwuntong'?'觀塘':(r.type==='reels'?'Reels':'薪資')));
+            let money = r.amount || (Number(r.upper)+Number(r.lower)) || (r.income) || (Number(r.lower));
+            if(r.type==='kwuntong' && r.refund) money = Number(r.lower); 
+            return `<div class="glass-panel p-3 rounded-xl flex justify-between mb-2 btn-action" onclick="editRecord('${r.id}')"><div><h4 class="font-bold text-sm">${title}</h4><p class="text-xs text-gray-400">${r.date}</p></div><div class="text-right font-bold text-neon-blue">$${money}</div></div>`;
+        }
+        function renderSourceList() { document.getElementById('source-list').innerHTML = customSources.map(s => `<span class="px-3 py-1 bg-white/10 rounded-full text-xs flex items-center gap-2 border border-white/5">${s} <button onclick="removeSource('${s}')" class="text-red-400"><i class="fa-solid fa-times"></i></button></span>`).join(''); }
+        async function addSource() { const v=document.getElementById('new-source-input').value; if(v && !customSources.includes(v)) { customSources.push(v); if(!isGuest) await getUserRef().set({customSources}, {merge:true}); renderSourceList(); } }
+        async function removeSource(v) { customSources=customSources.filter(s=>s!==v); if(!isGuest) await getUserRef().set({customSources}, {merge:true}); renderSourceList(); }
+
+        function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
+        function showApp() { 
+            document.getElementById('user-name').innerText = currentUser.displayName || "User";
+            document.getElementById('user-avatar').src = currentUser.photoURL || "";
+            document.getElementById('auth-screen').classList.add('hidden'); 
+            document.getElementById('app-container').classList.remove('hidden');
+            setTimeout(()=>document.getElementById('app-container').classList.add('opacity-100'),100);
+            if(isGuest) document.getElementById('guest-banner').classList.remove('hidden');
+            else loadData();
+            refreshCurrentView();
+        }
+
         init();
     </script>
 </body>
