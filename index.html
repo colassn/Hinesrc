@@ -39,13 +39,15 @@
                         'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'fade-in': 'fadeIn 0.3s ease-out forwards',
                         'accordion-down': 'accordionDown 0.3s ease-out forwards',
-                        'slide-up': 'slideUp 0.3s ease-out forwards'
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'spin-slow': 'spin 3s linear infinite'
                     },
                     keyframes: {
                         popIn: { from: { opacity: 0, transform: 'scale(0.9) translateY(20px)' }, to: { opacity: 1, transform: 'scale(1) translateY(0)' } },
                         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
                         accordionDown: { from: { opacity: 0, transform: 'translateY(-10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
-                        slideUp: { from: { transform: 'translateY(20px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } }
+                        slideUp: { from: { transform: 'translateY(20px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
+                        spin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } }
                     }
                 }
             }
@@ -87,6 +89,7 @@
             text-shadow: 0 0 10px #00f3ff;
             border-color: rgba(0, 243, 255, 0.3);
         }
+        .keypad-btn:active::before { opacity: 1; }
         .keypad-del { color: #ff0055; }
 
         /* Scrollable Type Switcher */
@@ -118,9 +121,12 @@
     <!-- UI Elements -->
     <div id="toast-container"></div>
     
+    <!-- Confirm Dialog -->
     <div id="custom-confirm" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-6 opacity-0 transition-opacity duration-200">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-6 transform scale-90 transition-transform duration-200" id="confirm-box">
-            <div class="w-14 h-14 rounded-full bg-neon-pink/10 border border-neon-pink/30 flex items-center justify-center text-neon-pink mb-4 mx-auto shadow-[0_0_20px_rgba(255,0,85,0.2)]"><i class="fa-solid fa-triangle-exclamation text-2xl"></i></div>
+            <div class="w-14 h-14 rounded-full bg-neon-pink/10 border border-neon-pink/30 flex items-center justify-center text-neon-pink mb-4 mx-auto shadow-[0_0_20px_rgba(255,0,85,0.2)]">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            </div>
             <h3 class="text-lg font-bold text-center mb-2">確認操作</h3>
             <p class="text-gray-400 text-center text-sm mb-6" id="confirm-msg">...</p>
             <div class="flex gap-3">
@@ -130,21 +136,32 @@
         </div>
     </div>
 
-    <!-- Auth Screen -->
-    <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto bg-[#050511]">
+    <!-- Auth -->
+    <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-[#050511]">
         <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
             <div class="glass-panel w-full max-w-[380px] p-8 rounded-[2.5rem] border-t border-white/20 relative mx-auto shadow-2xl animate-pop-in">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink"></div>
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 bg-gradient-to-br from-neon-blue to-neon-purple rounded-3xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(188,19,254,0.3)] mb-4"><i class="fa-solid fa-robot text-4xl text-white"></i></div>
                     <h1 class="text-2xl font-black tracking-wide">騫記錄專用網站</h1>
-                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V5.0 FINAL</p>
+                    <p class="text-neon-blue text-xs tracking-widest mt-1 opacity-80 font-mono">V5.1 REPAIR</p>
                 </div>
-                
-                <div class="space-y-4">
-                     <button onclick="handleGoogleLogin()" class="w-full py-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-lg"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6">使用 Google 登入</button>
-                    <button onclick="handleGuest()" class="w-full py-4 border border-white/20 text-gray-300 rounded-xl font-medium active:scale-95 transition-transform hover:bg-white/5 group"><i class="fa-solid fa-user-secret mr-2 group-hover:text-neon-green transition-colors"></i>訪客模式試用</button>
+                <div id="login-form" class="space-y-4">
+                    <input type="email" id="email" placeholder="電子郵件" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
+                    <input type="password" id="password" placeholder="密碼" class="glass-input w-full p-4 rounded-xl text-base placeholder-gray-500">
+                    <button onclick="handleLogin()" id="login-btn" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple rounded-xl font-bold text-white text-lg shadow-lg active:scale-95 transition-transform hover:shadow-[0_0_20px_rgba(0,243,255,0.4)]">進入系統</button>
                 </div>
-                <p class="text-[10px] text-gray-600 mt-8 text-center">SECURE CLOUD STORAGE</p>
+                <div class="mt-6 text-center text-sm text-gray-400">
+                    <span onclick="toggleMode()" class="cursor-pointer hover:text-white transition-colors">還沒有帳號？ <span class="text-neon-blue font-bold border-b border-neon-blue/30 pb-0.5">註冊</span></span>
+                </div>
+                <div class="mt-8 space-y-3">
+                     <button onclick="handleGoogleLogin()" class="w-full py-3 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">Google 登入</button>
+                    <button onclick="handleGuest()" class="w-full py-3 border border-white/20 text-gray-300 rounded-xl font-medium active:scale-95 transition-transform hover:bg-white/5 group"><i class="fa-solid fa-user-secret mr-2 group-hover:text-neon-green transition-colors"></i>訪客模式</button>
+                </div>
+                <div id="auth-loading" class="hidden mt-4 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-neon-blue text-2xl"></i>
+                    <p class="text-xs text-gray-500 mt-2">連接資料庫中...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -158,7 +175,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full p-[2px] bg-gradient-to-r from-neon-blue to-neon-pink shadow-[0_0_15px_rgba(188,19,254,0.4)]"><img id="user-avatar" src="" class="w-full h-full rounded-full bg-gray-900 object-cover"></div>
-                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V5.0 System</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
+                    <div><p class="text-[10px] text-neon-blue font-bold tracking-wider uppercase mb-0.5">V5.1 Pro</p><h2 class="text-xl font-bold text-white leading-none tracking-tight" id="user-name">User</h2></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openSettings()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><i class="fa-solid fa-gear"></i></button>
@@ -185,7 +202,7 @@
                 <button onclick="switchView('reels')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-reels"><i class="fa-brands fa-instagram text-lg mb-1"></i><span class="text-[10px] font-bold">Reels</span></button>
                 <button onclick="switchView('kwuntong')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-kwuntong"><i class="fa-solid fa-shop text-lg mb-1"></i><span class="text-[10px] font-bold">觀塘</span></button>
                 <button onclick="switchView('attendance')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-attendance"><i class="fa-solid fa-clock text-lg mb-1"></i><span class="text-[10px] font-bold">打卡</span></button>
-                <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-expense"><i class="fa-solid fa-cart-shopping text-lg mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
+                <button onclick="switchView('expense')" class="nav-item flex flex-col items-center justify-center w-14 h-full text-gray-500 transition-colors" id="nav-expense"><i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
             </div>
         </div>
 
@@ -193,7 +210,6 @@
         <div id="entry-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300" onclick="closeEntry()"></div>
             <div class="relative w-full max-w-lg glass-panel rounded-[2rem] p-6 sm:p-8 transform scale-95 opacity-0 transition-all duration-300 shadow-2xl border border-white/10 flex flex-col max-h-[85vh]" id="modal-content">
-                
                 <div class="flex items-center mb-6 gap-2 pb-2 border-b border-white/10 w-full" id="type-switcher-container">
                     <div id="type-switcher">
                         <button onclick="switchEntryType('camel')" class="type-tab text-neon-blue flex flex-col items-center"><i class="fa-solid fa-building text-xl mb-1"></i><span class="text-[10px] font-bold">駱駝漆</span></button>
@@ -202,22 +218,19 @@
                         <button onclick="switchEntryType('expense')" class="type-tab text-neon-pink flex flex-col items-center"><i class="fa-solid fa-cart-shopping text-xl mb-1"></i><span class="text-[10px] font-bold">入貨</span></button>
                     </div>
                 </div>
-
                 <div class="flex-1 overflow-y-auto no-scrollbar">
                     <h3 class="text-2xl font-black text-white mb-6 flex items-center justify-center gap-2 text-center" id="modal-title">新增記錄</h3>
                     <div id="modal-form-container" class="space-y-5"></div>
                 </div>
-
                 <div class="mt-6 flex flex-col gap-3 justify-center pt-4 border-t border-white/10">
                     <button id="modal-submit-btn" onclick="submitEntry()" class="w-full py-4 bg-white text-black rounded-xl font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95 text-lg">確認儲存</button>
                     <button id="modal-delete-btn" onclick="deleteFromModal()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold hidden hover:bg-red-500/20 transition-all active:scale-95 text-lg">刪除此記錄</button>
                 </div>
-                
                 <button onclick="closeEntry()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
 
-        <!-- Haptic Keypad -->
+        <!-- Keypad -->
         <div id="custom-keypad" class="fixed bottom-0 left-0 w-full glass-panel z-[60] transform translate-y-full transition-transform duration-200 border-t border-white/20 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
             <div class="flex justify-between items-center px-6 py-2 bg-black/40 border-b border-white/5 backdrop-blur-xl">
                 <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">HINES TACTILE INPUT</span>
@@ -234,8 +247,18 @@
     </div>
 
     <script>
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hines-pro-os';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // --- 核心修復：使用手動配置 ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI",
+          authDomain: "hinesrc-25cee.firebaseapp.com",
+          projectId: "hinesrc-25cee",
+          storageBucket: "hinesrc-25cee.firebasestorage.app",
+          messagingSenderId: "873846921584",
+          appId: "1:873846921584:web:079586988dee370cc957b5",
+          measurementId: "G-TQRKF54G4F"
+        };
+        const appId = 'hinesrc-25cee'; // Use actual project ID for consistency
+        
         let app, auth, db;
         let currentUser = null, records = [], isGuest = false, currentFilter = 'dashboard';
         let unsubscribe = null, activeKeypadInput = null, activeEditId = null, activeType = 'camel';
@@ -244,55 +267,56 @@
 
         function init() {
             try {
-                app = firebase.initializeApp(firebaseConfig);
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
                 auth = firebase.auth();
                 db = firebase.firestore();
                 
                 auth.onAuthStateChanged(user => {
-                    if (user && !isGuest) {
-                        currentUser = user;
-                        showApp();
-                    } else if (!isGuest) {
-                        showAuth();
+                    if (user && !isGuest) { 
+                        currentUser = user; 
+                        showApp(); 
+                    } else if (!isGuest) { 
+                        showAuth(); 
                     }
                 });
                 startClock();
-            } catch (e) { console.error(e); showToast("初始化失敗", "error"); }
+            } catch (e) { console.error(e); showToast("系統初始化失敗: " + e.message, "error"); }
         }
 
-        // --- Data ---
-        function getUserRef() { return db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid); }
+        // --- Data Logic ---
+        function getUserRef() {
+            // Path: artifacts/{appId}/users/{userId}
+            return db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid);
+        }
 
         function loadData() {
             if(unsubscribe) unsubscribe();
             if(isGuest) return;
+            
+            showToast("正在同步資料...", "info");
             const ref = getUserRef().collection('records');
             unsubscribe = ref.onSnapshot(snap => {
                 records = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                records.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-                refreshCurrentView();
+                records.sort((a,b) => {
+                    const da = new Date(a.date || 0).getTime();
+                    const db = new Date(b.date || 0).getTime();
+                    return db - da; // Descending
+                });
+                refreshCurrentView(); // Force UI Refresh
+            }, error => {
+                console.error("Data Load Error:", error);
+                showToast("讀取失敗: " + error.code, "error");
             });
-            getUserRef().get().then(doc => { if(doc.exists && doc.data().customSources) customSources = doc.data().customSources; });
+            
             checkAttendanceStatus();
+            getUserRef().get().then(doc => { if(doc.exists && doc.data().customSources) customSources = doc.data().customSources; });
         }
 
         function refreshCurrentView() { switchView(currentFilter); }
-
-        // --- Auth ---
-        function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
-        function showApp() { 
-            document.getElementById('user-name').innerText = currentUser.displayName || "User";
-            document.getElementById('user-avatar').src = currentUser.photoURL || "";
-            document.getElementById('auth-screen').classList.add('hidden'); 
-            document.getElementById('app-container').classList.remove('hidden');
-            setTimeout(()=>document.getElementById('app-container').classList.add('opacity-100'),100);
-            if(isGuest) document.getElementById('guest-banner').classList.remove('hidden');
-            else loadData();
-            refreshCurrentView();
-        }
-        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>showToast(e.message,'error')); }
-        function handleGuest() { isGuest=true; currentUser={uid:'guest',displayName:'訪客'}; records=[]; showApp(); }
-        function handleLogout() { auth.signOut(); location.reload(); }
 
         // --- View Logic ---
         function switchView(view) {
@@ -321,10 +345,13 @@
                     inc += Number(r.lower || 0);
                     exp += Number(r.refund || 0);
                     if(r.refunded) inc += Number(r.refund || 0);
-                } else {
-                    if(r.type === 'camel') inc += Number(r.upper || 0) + Number(r.lower || 0);
-                    if(r.type === 'reels') inc += Number(r.income || 0);
-                    if(r.type === 'attendance') inc += Number(r.amount || 0);
+                }
+                else {
+                    let val = 0;
+                    if(r.type === 'camel') val = Number(r.upper || 0) + Number(r.lower || 0);
+                    if(r.type === 'reels') val = Number(r.income || 0);
+                    if(r.type === 'attendance') val = Number(r.amount || 0);
+                    inc += val;
                 }
             });
             document.getElementById('net-profit').innerText = `$${inc - exp}`;
@@ -392,21 +419,11 @@
             checkAttendanceStatus();
         }
 
-        // --- Core Functions ---
-        function getTitle(t) { const map = { 'camel': '駱駝漆', 'reels': 'Reels', 'kwuntong': '觀塘', 'expense': '入貨', 'income': '收入', 'attendance': '打卡' }; return map[t] || '列表'; }
-        function renderCard(r) {
-            let title = r.type;
-            if(r.type==='camel') title = '駱駝漆';
-            if(r.type==='reels') title = r.content || 'Reels';
-            if(r.type==='kwuntong') title = '觀塘廣場';
-            if(r.type==='expense') title = r.name || '入貨';
-            if(r.type==='attendance') title = '薪資';
-            return `<div class="glass-panel p-3 rounded-xl flex justify-between mb-2 cursor-pointer" onclick="openEntry('${r.type}', {id:'${r.id}',...records.find(x=>x.id=='${r.id}')})"><div><h4 class="font-bold text-sm">${title}</h4><p class="text-xs text-gray-400">${r.date}</p></div><div class="text-right"><i class="fa-solid fa-chevron-right text-xs"></i></div></div>`;
-        }
-        
+        // --- Modals & Actions ---
         function openEntry(type, record=null) {
             activeType = type; activeEditId = record?.id;
             const modal = document.getElementById('entry-modal');
+            
             document.getElementById('modal-title').innerText = record ? "修改記錄" : "新增記錄";
             document.getElementById('modal-submit-btn').innerText = record ? "更新" : "儲存";
             document.getElementById('modal-delete-btn').classList.toggle('hidden', !record);
@@ -418,11 +435,24 @@
                 const btnIndex = {camel:0, reels:1, kwuntong:2, expense:3}[type];
                 if(btnIndex!==undefined) document.getElementById('type-switcher').children[btnIndex].classList.add('active');
             }
+
             renderEntryForm(type, record);
             modal.classList.remove('hidden');
+            setTimeout(() => {
+                const content = document.getElementById('modal-content');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
         }
 
-        function switchEntryType(type) { if(activeEditId) return; activeType = type; renderEntryForm(type, null); document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active')); const btnIndex = {camel:0, reels:1, kwuntong:2, expense:3}[type]; if(btnIndex!==undefined) document.getElementById('type-switcher').children[btnIndex].classList.add('active'); }
+        function switchEntryType(type) {
+            if(activeEditId) return; 
+            activeType = type;
+            renderEntryForm(type, null);
+            document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+            const btnIndex = {camel:0, reels:1, kwuntong:2, expense:3}[type];
+            if(btnIndex!==undefined) document.getElementById('type-switcher').children[btnIndex].classList.add('active');
+        }
 
         function renderEntryForm(type, data) {
             const container = document.getElementById('modal-form-container');
@@ -436,13 +466,22 @@
             container.innerHTML = html;
         }
 
-        function closeEntry() { document.getElementById('entry-modal').classList.add('hidden'); closeKeypad(); activeEditId=null; }
+        function closeEntry() { 
+            const content = document.getElementById('modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(()=>document.getElementById('entry-modal').classList.add('hidden'), 300); 
+            closeKeypad(); activeEditId=null; 
+        }
 
         async function submitEntry() {
             const btn = document.getElementById('modal-submit-btn'); btn.innerHTML = '處理中...'; btn.disabled = true;
-            const date = document.getElementById('in-date').value;
-            let data = { type: activeType, date };
+            const dateVal = document.getElementById('in-date').value;
+            if (!dateVal) { showToast("請選擇日期", "error"); btn.innerHTML='確認儲存'; btn.disabled=false; return; }
+
+            let data = { type: activeType, date: dateVal };
             if(!activeEditId && !isGuest) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
             if(activeType==='camel') { data.upper = document.getElementById('in-upper').value; data.lower = document.getElementById('in-lower').value; data.note = document.getElementById('in-note').value; }
             else if(activeType==='reels') { data.income = document.getElementById('in-income').value; data.content = document.getElementById('in-content').value; }
             else if(activeType==='kwuntong') { data.lower = document.getElementById('in-lower').value; data.refund = document.getElementById('in-refund').value; if(!activeEditId) data.refunded = false; }
@@ -450,13 +489,13 @@
 
             try {
                 if(isGuest) {
-                    if(activeEditId) { const i=records.findIndex(r=>r.id===activeEditId); if(i>-1) records[i]={...records[i], ...data}; }
+                    if(activeEditId) { const i=records.findIndex(r=>r.id===activeEditId); if(i>-1) records[i]={...records[i],...data}; }
                     else { data.id='g_'+Date.now(); records.unshift(data); }
                     showToast("已儲存 (訪客)", "success");
                 } else {
                     const ref = getUserRef().collection('records');
                     if(activeEditId) await ref.doc(activeEditId).update(data); else await ref.add(data);
-                    showToast("已同步", "success");
+                    showToast("已同步雲端", "success");
                 }
                 closeEntry(); refreshCurrentView();
             } catch(e) { showToast("失敗: "+e.message, "error"); } finally { btn.innerHTML = '確認儲存'; btn.disabled = false; }
@@ -469,58 +508,70 @@
                 else { await getUserRef().collection('records').doc(id).delete(); showToast("已刪除","success"); }
             });
         }
-        function closeConfirm(r) { const md=document.getElementById('custom-confirm'); md.classList.add('hidden'); if(r && confirmCallback) confirmCallback(); confirmCallback=null; }
-        function showConfirm(m, cb) { document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
-        document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
+        function editRecord(id) { const r=records.find(i=>i.id===id); if(r) openEntry(r.type, '', r); }
+        async function confirmRefund(id) { if(isGuest)return; await getUserRef().collection('records').doc(id).update({refunded:true}); showToast("退款已確認","success"); }
+
+        // --- Auth & Core ---
+        function showAuth() { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app-container').classList.add('hidden'); }
+        function showApp() { 
+            document.getElementById('user-name').innerText = currentUser.displayName || "User";
+            document.getElementById('user-avatar').src = currentUser.photoURL || "";
+            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app-container').classList.remove('hidden');
+            setTimeout(()=>document.getElementById('app-container').classList.add('opacity-100'),100);
+            if(isGuest) document.getElementById('guest-banner').classList.remove('hidden'); else loadData();
+            refreshCurrentView();
+        }
+        function handleGoogleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>showToast(e.message,'error')); }
+        function handleGuest() { isGuest=true; currentUser={uid:'guest',displayName:'訪客'}; records=[]; showApp(); }
+        function handleLogout() { auth.signOut(); location.reload(); }
+        function handleLogin() { 
+            const e=document.getElementById('email').value, p=document.getElementById('password').value;
+            if(!e||!p) return showToast("請輸入完整資訊","error");
+            if(isLoginView) auth.signInWithEmailAndPassword(e,p).catch(err=>showToast(err.message,"error")); else auth.createUserWithEmailAndPassword(e,p).then(()=>showToast("註冊成功","success")).catch(err=>showToast(err.message,"error"));
+        }
+        function toggleMode() { isLoginView=!isLoginView; const b=document.getElementById('login-btn'); b.innerText=isLoginView?"進入系統":"立即註冊"; }
+
+        // --- Helpers ---
+        function getTitle(t) { const map = { 'camel': '駱駝漆', 'reels': 'Reels', 'kwuntong': '觀塘', 'expense': '入貨', 'income': '收入', 'attendance': '打卡' }; return map[t] || '列表'; }
+        function renderCard(r) {
+            let title = r.type;
+            if(r.type==='camel') title = '駱駝漆'; if(r.type==='reels') title = r.content || 'Reels'; if(r.type==='kwuntong') title = '觀塘廣場'; if(r.type==='expense') title = r.name || '入貨'; if(r.type==='attendance') title = '薪資';
+            return `<div class="glass-panel p-3 rounded-xl flex justify-between mb-2 cursor-pointer" onclick="editRecord('${r.id}')"><div><h4 class="font-bold text-sm">${title}</h4><p class="text-xs text-gray-400">${r.date}</p></div><div class="text-right"><i class="fa-solid fa-chevron-right text-xs"></i></div></div>`;
+        }
         function showToast(m, t) { const el=document.createElement('div'); el.className=`toast-msg border-${t==='error'?'red':'green'}-500`; el.innerHTML=`<span>${m}</span>`; document.getElementById('toast-container').appendChild(el); setTimeout(()=>el.remove(),3000); }
+        let confirmCallback=null; function showConfirm(m, cb) { document.getElementById('confirm-msg').innerText=m; confirmCallback=cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
+        function closeConfirm(r) { document.getElementById('custom-confirm').classList.add('hidden'); if(r && confirmCallback) confirmCallback(); confirmCallback=null; }
+        document.getElementById('confirm-yes-btn').onclick=()=>closeConfirm(true);
+
+        // Keypad
         function openKeypad(id) { activeKeypadInput=document.getElementById(id); document.getElementById('custom-keypad').classList.remove('translate-y-full'); }
         function closeKeypad() { document.getElementById('custom-keypad').classList.add('translate-y-full'); activeKeypadInput=null; }
-        function kpInput(v) { if(activeKeypadInput) { activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); }}
-        function kpDel() { if(activeKeypadInput) activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); }
-        
-        function startClock() { setInterval(()=>{ const d = new Date(); document.getElementById('clock-time').innerText=d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('clock-date').innerText=`${d.getMonth()+1}/${d.getDate()}`; if(workStartTime){ const diff=d-workStartTime; const hrs=Math.floor(diff/3600000); const mins=Math.floor((diff%3600000)/60000); const secs=Math.floor((diff%60000)/1000); document.getElementById('work-duration').innerText=`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; document.getElementById('est-1h').innerText=new Date(d.getTime()+3600000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('est-2h').innerText=new Date(d.getTime()+7200000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); } }, 1000); }
-        
+        function kpInput(v, btn) { if(activeKeypadInput){ activeKeypadInput.value+=v; activeKeypadInput.dispatchEvent(new Event('input')); if(btn){btn.classList.add('pressed');setTimeout(()=>btn.classList.remove('pressed'),100);} if(navigator.vibrate)navigator.vibrate(15); } }
+        function kpDel(btn) { if(activeKeypadInput){ activeKeypadInput.value=activeKeypadInput.value.slice(0,-1); activeKeypadInput.dispatchEvent(new Event('input')); } }
+
+        // Clock & Att
+        function startClock() { setInterval(()=>{ const d=new Date(); document.getElementById('clock-time').innerText=d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('clock-date').innerText=`${d.getMonth()+1}/${d.getDate()}`; if(workStartTime){ const diff=d-workStartTime; const hrs=Math.floor(diff/3600000); const mins=Math.floor((diff%3600000)/60000); const secs=Math.floor((diff%60000)/1000); document.getElementById('work-duration').innerText=`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; document.getElementById('est-1h').innerText=new Date(d.getTime()+3600000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); document.getElementById('est-2h').innerText=new Date(d.getTime()+7200000).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}); } },1000); }
         function checkAttendanceStatus() {
             if(isGuest) return;
             getUserRef().collection('attendance').doc('current').onSnapshot(doc => {
-                const btnIn = document.getElementById('btn-clock-in');
-                const btnOut = document.getElementById('btn-clock-out');
-                const status = document.getElementById('work-status-text');
-                const info = document.getElementById('active-work-info');
+                const btnIn=document.getElementById('btn-clock-in'), btnOut=document.getElementById('btn-clock-out'), status=document.getElementById('work-status-text'), info=document.getElementById('active-work-info');
                 if(!btnIn) return;
-                if(doc.exists) {
-                    workStartTime = doc.data().startTime.toDate();
-                    btnIn.classList.add('hidden'); btnOut.classList.remove('hidden'); info.classList.remove('hidden');
-                    status.innerText = "工作中..."; status.classList.add('text-neon-green');
-                } else {
-                    workStartTime = null;
-                    btnIn.classList.remove('hidden'); btnOut.classList.add('hidden'); info.classList.add('hidden');
-                    status.innerText = "準備就緒"; status.classList.remove('text-neon-green');
-                }
+                if(doc.exists) { workStartTime=doc.data().startTime.toDate(); btnIn.classList.add('hidden'); btnOut.classList.remove('hidden'); info.classList.remove('hidden'); status.innerText="工作中..."; status.classList.add('text-neon-green'); }
+                else { workStartTime=null; btnIn.classList.remove('hidden'); btnOut.classList.add('hidden'); info.classList.add('hidden'); status.innerText="準備就緒"; status.classList.remove('text-neon-green'); }
             });
         }
-        async function startWork() { if(isGuest) return; await getUserRef().collection('attendance').doc('current').set({startTime: firebase.firestore.FieldValue.serverTimestamp()}); }
+        async function startWork() { if(isGuest) { showToast("訪客不可用","info"); return; } await getUserRef().collection('attendance').doc('current').set({startTime: firebase.firestore.FieldValue.serverTimestamp()}); showToast("打卡成功","success"); }
         async function endWork() {
             if(isGuest) return;
-            const ref = getUserRef().collection('attendance').doc('current');
-            const snap = await ref.get();
+            const ref=getUserRef().collection('attendance').doc('current'); const snap=await ref.get();
             if(snap.exists) {
-                const start = snap.data().startTime.toDate();
-                const now = new Date();
-                const diff = (now - start) / 1000 / 60; 
-                const blocks = Math.ceil(diff / 30);
-                const pay = blocks * 25;
-                const hours = (blocks * 0.5).toFixed(1);
-                await getUserRef().collection('records').add({
-                    type: 'attendance', date: now.toISOString().split('T')[0], amount: pay,
-                    clockIn: start.toLocaleTimeString(), clockOut: now.toLocaleTimeString(),
-                    note: `工時: ${hours}小時`,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                await ref.delete();
-                showToast(`薪資 $${pay} 已入帳`, 'success');
+                const start=snap.data().startTime.toDate(), now=new Date();
+                const diff=(now-start)/1000/60; const blocks=Math.ceil(diff/30); const pay=blocks*25; const hours=(blocks*0.5).toFixed(1);
+                await getUserRef().collection('records').add({ type:'attendance', date:now.toISOString().split('T')[0], amount:pay, clockIn:start.toLocaleTimeString(), clockOut:now.toLocaleTimeString(), note:`工時: ${hours}小時`, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+                await ref.delete(); showToast(`薪資 $${pay} 已入帳`,'success');
             }
         }
+        
         init();
     </script>
 </body>
