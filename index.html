@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>騫紀錄公仔機系統 v4.4 (Cloud Clock)</title>
+    <title>騫紀錄公仔機系統 v4.5 (Date Picker)</title>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -100,6 +100,11 @@
         .text-shadow-neon { text-shadow: 0 0 15px rgba(0, 243, 255, 0.4), 0 0 5px rgba(0, 243, 255, 0.8); }
         .text-shadow-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.4), 0 0 5px rgba(255, 0, 255, 0.8); }
         h1, h2, button { font-weight: 700 !important; letter-spacing: 0.03em; }
+        
+        /* Date picker custom style */
+        input[type="date"] {
+            color-scheme: dark;
+        }
 
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0a0a12; }
@@ -132,7 +137,7 @@
 
     <script type="text/babel">
         // --- CONFIG & VERSION ---
-        const APP_VERSION = "v4.4.KIEN-CLAW";
+        const APP_VERSION = "v4.5.KIEN-CLAW";
         
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
@@ -231,7 +236,7 @@
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cyber-black/95 backdrop-blur-xl animate-fade-in px-6">
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1535295972055-1c762f4483e5?q=80&w=2071&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none mix-blend-screen"></div>
                     <div className="relative z-10 w-full max-w-sm">
-                        <div className="text-center mb-12"><h1 className="text-5xl text-white mb-2 tracking-[0.1em] text-shadow-neon" style={{fontWeight: 900}}>騫紀錄</h1><div className="text-3xl font-num font-bold text-cyber-neon tracking-[0.2em] mb-2" style={{textShadow: '0 0 10px rgba(0,243,255,0.8)'}}>CLAW</div><div className="h-px w-24 bg-gradient-to-r from-transparent via-cyber-pink to-transparent mx-auto mb-2"></div><p className="text-gray-400 font-num text-xs tracking-[0.3em] uppercase">SYSTEM v4.4 HK</p></div>
+                        <div className="text-center mb-12"><h1 className="text-5xl text-white mb-2 tracking-[0.1em] text-shadow-neon" style={{fontWeight: 900}}>騫紀錄</h1><div className="text-3xl font-num font-bold text-cyber-neon tracking-[0.2em] mb-2" style={{textShadow: '0 0 10px rgba(0,243,255,0.8)'}}>CLAW</div><div className="h-px w-24 bg-gradient-to-r from-transparent via-cyber-pink to-transparent mx-auto mb-2"></div><p className="text-gray-400 font-num text-xs tracking-[0.3em] uppercase">SYSTEM v4.5 HK</p></div>
                         <div className="glass-panel p-8 rounded-2xl border border-cyber-neon/30 shadow-[0_0_80px_rgba(0,243,255,0.1)]">
                             {errorMsg && <div className="mb-4 p-3 bg-red-900/40 border-l-2 border-red-500 text-red-200 text-xs text-center tracking-wide">{errorMsg}</div>}
                             <button onClick={onGoogleLogin} className="w-full py-4 mb-6 bg-white text-gray-900 font-extrabold hover:bg-gray-100 transition-all duration-300 rounded flex items-center justify-center gap-3 shadow-lg group relative overflow-hidden tracking-widest"><div className="absolute inset-0 bg-cyber-neon/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="G" /><span className="relative z-10">Google 登入</span></button>
@@ -422,81 +427,8 @@
             const [clockedIn, setClockedIn] = React.useState(false);
             const [startTime, setStartTime] = React.useState(null);
             const [accruedWage, setAccruedWage] = React.useState(0);
-
-            // Cloud Sync Logic
-            React.useEffect(() => {
-                let unsubscribe;
-                if (user.type === 'guest') {
-                    const saved = localStorage.getItem('hk_cyber_clock_status');
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        setClockedIn(true);
-                        setStartTime(new Date(data.startTime));
-                    }
-                } else if (user.type === 'firebase') {
-                    unsubscribe = db.collection('users').doc(user.uid).collection('settings').doc('clock_status')
-                        .onSnapshot((doc) => {
-                            if (doc.exists && doc.data().isClockedIn) {
-                                setClockedIn(true);
-                                setStartTime(new Date(doc.data().startTime));
-                            } else {
-                                // If doc deleted (clocked out elsewhere), update local state
-                                if (clockedIn) setClockedIn(false);
-                            }
-                        });
-                }
-                return () => { if(unsubscribe) unsubscribe(); };
-            }, [user]);
-
-            React.useEffect(() => {
-                const t = setInterval(() => {
-                    const currentTime = new Date();
-                    setNow(currentTime);
-
-                    if (clockedIn && startTime) {
-                        const diffMs = currentTime - startTime;
-                        const diffHours = diffMs / (1000 * 60 * 60);
-                        const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
-                        const finalHours = roundedHours === 0 ? 0.5 : roundedHours;
-                        setAccruedWage(finalHours * 50);
-                    }
-                }, 1000);
-                return () => clearInterval(t);
-            }, [clockedIn, startTime]);
-
-            const handleClockToggle = async () => {
-                if (!clockedIn) {
-                    const start = new Date();
-                    setStartTime(start);
-                    setClockedIn(true);
-                    setAccruedWage(25);
-                    playConfirmSound();
-                    
-                    const statusData = { isClockedIn: true, startTime: start.toISOString() };
-                    if (user.type === 'guest') localStorage.setItem('hk_cyber_clock_status', JSON.stringify(statusData));
-                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').set(statusData);
-                    
-                    onClockAction('打卡成功：已上班');
-                } else {
-                    playClickSound();
-                    onClockAction(`打卡成功：已下班 (本次薪資: HK$ ${accruedWage})`);
-                    
-                    const record = {
-                        catId: 'checkin',
-                        categoryName: '打卡',
-                        amount: accruedWage,
-                        title: '打卡薪資',
-                        details: { wage: accruedWage }
-                    };
-                    onSaveRecord(record);
-
-                    setClockedIn(false);
-                    setStartTime(null);
-                    setAccruedWage(0);
-                    if (user.type === 'guest') localStorage.removeItem('hk_cyber_clock_status');
-                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').delete();
-                }
-            };
+            React.useEffect(() => { const t = setInterval(() => { const currentTime = new Date(); setNow(currentTime); if (clockedIn && startTime) { const diffMs = currentTime - startTime; const diffHours = diffMs / (1000 * 60 * 60); const roundedHours = Math.ceil(diffHours / 0.5) * 0.5; const finalHours = roundedHours === 0 ? 0.5 : roundedHours; setAccruedWage(finalHours * 50); } }, 1000); return () => clearInterval(t); }, [clockedIn, startTime]);
+            const handleClockToggle = async () => { if (!clockedIn) { const start = new Date(); setStartTime(start); setClockedIn(true); setAccruedWage(25); playConfirmSound(); const statusData = { isClockedIn: true, startTime: start.toISOString() }; if (user.type === 'guest') localStorage.setItem('hk_cyber_clock_status', JSON.stringify(statusData)); else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').set(statusData); onClockAction('打卡成功：已上班'); } else { playClickSound(); onClockAction(`打卡成功：已下班 (本次薪資: HK$ ${accruedWage})`); const record = { catId: 'checkin', categoryName: '打卡', amount: accruedWage, title: '打卡薪資', details: { wage: accruedWage } }; onSaveRecord(record); setClockedIn(false); setStartTime(null); setAccruedWage(0); if (user.type === 'guest') localStorage.removeItem('hk_cyber_clock_status'); else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').delete(); } };
             const formatTime = (date) => date.toLocaleTimeString('en-US', {hour12: false});
             return (
                 <div className="h-full flex flex-col items-center pt-12 px-6 animate-fade-in pb-24">
@@ -525,8 +457,15 @@
             );
         };
 
+        // --- FIXED RECORD FORM MODAL ---
         const RecordFormModal = ({ isOpen, onClose, categories, initialData, initialCatId, customSources, onSave, onRequestDelete }) => {
             if (!isOpen) return null;
+            
+            const formatDateForInput = (dateObj) => {
+                const d = new Date(dateObj);
+                return d.toISOString().split('T')[0];
+            };
+
             const targetCatId = initialData ? initialData.catId : (initialCatId || categories[0].id);
             const [activeCatId, setActiveCatId] = React.useState(targetCatId);
             const activeCat = categories.find(c => c.id === activeCatId) || categories[0];
@@ -537,10 +476,12 @@
             const [kwunTab, setKwunTab] = React.useState('income');
             const [videoCount, setVideoCount] = React.useState(1);
             const [productName, setProductName] = React.useState('');
+            const [recordDate, setRecordDate] = React.useState(formatDateForInput(new Date()));
 
             React.useEffect(() => {
                 if (initialData && initialData.catId === activeCatId) {
                     setNote(initialData.title || '');
+                    setRecordDate(formatDateForInput(initialData.date));
                     if (activeCat.type === 'complex') { setSubInput1(initialData.details?.upper || ''); setSubInput2(initialData.details?.lower || ''); } 
                     else if (activeCat.type === 'split') { if (initialData.details?.refund > 0) { setKwunTab('refund'); setInputVal(String(initialData.details.refund)); } else { setKwunTab('income'); setInputVal(String(initialData.details.income || 0)); } } 
                     else if (activeCat.id === 'reels') { setVideoCount(initialData.details?.videoCount || (Math.abs(initialData.amount) / 25) || 1); } 
@@ -550,7 +491,7 @@
                     if (!initialData) { 
                         if (initialCatId) setActiveCatId(initialCatId);
                         setInputVal(''); setNote(''); setSubInput1(''); setSubInput2(''); setKwunTab('income'); 
-                        setVideoCount(1); setProductName('');
+                        setVideoCount(1); setProductName(''); setRecordDate(formatDateForInput(new Date()));
                     }
                 }
             }, [activeCatId, initialData, initialCatId, isOpen]);
@@ -563,7 +504,21 @@
                 else if (activeCat.id === 'stock') { amount = -(parseFloat(inputVal) || 0); details = { productName }; } 
                 else { amount = parseFloat(inputVal) || 0; }
                 if (amount === 0 && !note) { playClickSound(); return; }
-                const recordData = { catId: activeCat.id, categoryName: activeCat.name, amount, title: note || (activeCat.id === 'kwun' ? (kwunTab === 'income' ? '收入' : '退款') : activeCat.name), details };
+
+                let finalDate;
+                if (initialData) {
+                    const oldDate = new Date(initialData.date);
+                    const newYMD = new Date(recordDate);
+                    oldDate.setFullYear(newYMD.getFullYear(), newYMD.getMonth(), newYMD.getDate());
+                    finalDate = oldDate.toISOString();
+                } else {
+                     const now = new Date();
+                     const selected = new Date(recordDate);
+                     selected.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                     finalDate = selected.toISOString();
+                }
+
+                const recordData = { catId: activeCat.id, categoryName: activeCat.name, amount, date: finalDate, title: note || (activeCat.id === 'kwun' ? (kwunTab === 'income' ? '收入' : '退款') : activeCat.name), details };
                 onSave(recordData); onClose();
             };
 
@@ -580,6 +535,12 @@
                         <div className="flex-1 overflow-y-auto p-5 flex flex-col relative">
                             <div className="absolute top-10 left-10 text-[10rem] text-white/5 font-num font-bold pointer-events-none -z-10">{activeCatId.substring(0,2).toUpperCase()}</div>
                             <h2 className="text-3xl font-bold text-white mb-6 text-center tracking-widest text-shadow-neon">{activeCat.name}</h2>
+                            
+                            <div className="mb-6">
+                                <label className="text-xs text-gray-500 font-bold tracking-widest block mb-2">日期 (DATE)</label>
+                                <input type="date" value={recordDate} onChange={(e) => setRecordDate(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-3 text-white font-num text-lg outline-none focus:border-cyber-neon" />
+                            </div>
+
                             {activeCat.id === 'reels' && <div className="space-y-6 mb-4"><input type="text" placeholder="影片標題 (TITLE)" value={note} onChange={e=>setNote(e.target.value)} className="w-full bg-transparent border-b border-gray-700 p-3 text-white focus:border-cyber-neon outline-none text-xl tracking-wide font-medium" /><div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10"><span className="text-gray-400 font-bold tracking-widest">影片數量</span><div className="flex items-center gap-4"><button onClick={()=>{if(videoCount>1) {playClickSound(); setVideoCount(c=>c-1);}}} className="w-10 h-10 rounded-full bg-cyber-pink/20 text-cyber-pink border border-cyber-pink flex items-center justify-center text-xl font-bold active:scale-95 transition-transform">-</button><span className="text-2xl font-num font-bold text-white w-8 text-center">{videoCount}</span><button onClick={()=>{playClickSound(); setVideoCount(c=>c+1);}} className="w-10 h-10 rounded-full bg-cyber-neon/20 text-cyber-neon border border-cyber-neon flex items-center justify-center text-xl font-bold active:scale-95 transition-transform">+</button></div></div><div className="p-4 bg-cyber-neon/5 rounded border border-cyber-neon/20 flex justify-between items-center"><div className="text-xs text-cyber-neon tracking-widest font-bold">預計收入</div><div className="text-white font-num text-3xl font-bold text-shadow-neon">HK$ {(videoCount * 25).toLocaleString()}</div></div></div>}
                             {activeCat.id === 'camel' && <div className="flex gap-4 mb-6"><div className="flex-1"><label className="text-xs text-gray-500 block mb-2 tracking-widest font-bold">上層收入</label><input type="number" value={subInput1} onChange={e=>setSubInput1(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-4 text-cyber-neon font-num text-2xl text-right outline-none focus:border-cyber-neon" placeholder="0" /></div><div className="flex-1"><label className="text-xs text-gray-500 block mb-2 tracking-widest font-bold">下層收入</label><input type="number" value={subInput2} onChange={e=>setSubInput2(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-4 text-cyber-neon font-num text-2xl text-right outline-none focus:border-cyber-neon" placeholder="0" /></div></div>}
                             {activeCat.id === 'kwun' && <div className="mb-6"><div className="flex border-b border-gray-800 mb-6"><button onClick={()=>setKwunTab('income')} className={`flex-1 pb-3 text-sm font-bold tracking-[0.2em] transition-all relative ${kwunTab==='income' ? 'text-cyber-neon' : 'text-gray-600'}`}>收入{kwunTab==='income' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyber-neon shadow-[0_0_10px_#00f3ff]"></div>}</button><button onClick={()=>setKwunTab('refund')} className={`flex-1 pb-3 text-sm font-bold tracking-[0.2em] transition-all relative ${kwunTab==='refund' ? 'text-cyber-pink' : 'text-gray-600'}`}>退款{kwunTab==='refund' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyber-pink shadow-[0_0_10px_#ff00ff]"></div>}</button></div><div className="text-center mb-4"><div className={`text-5xl font-num font-bold ${kwunTab==='income' ? 'text-cyber-neon text-shadow-neon' : 'text-cyber-pink text-shadow-pink'}`}>${inputVal || '0'}</div><div className="text-xs text-gray-500 mt-2 tracking-widest font-bold">{kwunTab === 'income' ? '輸入收入金額' : '輸入退款金額 (支出)'}</div></div></div>}
@@ -643,9 +604,9 @@
                     else { db.collection('users').doc(user.uid).collection('records').doc(editingRecord.id).update(updatedFields); }
                     triggerNotification('紀錄已更新');
                 } else {
-                    const newRecord = { date: new Date().toISOString(), ...recordData };
-                    if (user.type === 'guest') { const up = [{id:Date.now(), ...newRecord}, ...records]; setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
-                    else { db.collection('users').doc(user.uid).collection('records').add(newRecord); }
+                    // recordData.date is already handled inside Modal
+                    if (user.type === 'guest') { const up = [{id:Date.now(), ...recordData}, ...records]; setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                    else { db.collection('users').doc(user.uid).collection('records').add(recordData); }
                     triggerNotification('新紀錄已儲存');
                 }
             };
