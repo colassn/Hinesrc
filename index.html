@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>騫紀錄公仔機系統 v4.5 (Date Picker)</title>
+    <title>騫紀錄公仔機系統 v4.6 (Sync Fix)</title>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -100,11 +100,6 @@
         .text-shadow-neon { text-shadow: 0 0 15px rgba(0, 243, 255, 0.4), 0 0 5px rgba(0, 243, 255, 0.8); }
         .text-shadow-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.4), 0 0 5px rgba(255, 0, 255, 0.8); }
         h1, h2, button { font-weight: 700 !important; letter-spacing: 0.03em; }
-        
-        /* Date picker custom style */
-        input[type="date"] {
-            color-scheme: dark;
-        }
 
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0a0a12; }
@@ -130,6 +125,17 @@
         details > summary::-webkit-details-marker { display: none; }
         .folder-arrow { transition: transform 0.2s; }
         details[open] .folder-arrow { transform: rotate(90deg); }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #00f3ff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -137,7 +143,7 @@
 
     <script type="text/babel">
         // --- CONFIG & VERSION ---
-        const APP_VERSION = "v4.5.KIEN-CLAW";
+        const APP_VERSION = "v4.6.KIEN-CLAW";
         
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
@@ -236,7 +242,7 @@
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cyber-black/95 backdrop-blur-xl animate-fade-in px-6">
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1535295972055-1c762f4483e5?q=80&w=2071&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none mix-blend-screen"></div>
                     <div className="relative z-10 w-full max-w-sm">
-                        <div className="text-center mb-12"><h1 className="text-5xl text-white mb-2 tracking-[0.1em] text-shadow-neon" style={{fontWeight: 900}}>騫紀錄</h1><div className="text-3xl font-num font-bold text-cyber-neon tracking-[0.2em] mb-2" style={{textShadow: '0 0 10px rgba(0,243,255,0.8)'}}>CLAW</div><div className="h-px w-24 bg-gradient-to-r from-transparent via-cyber-pink to-transparent mx-auto mb-2"></div><p className="text-gray-400 font-num text-xs tracking-[0.3em] uppercase">SYSTEM v4.5 HK</p></div>
+                        <div className="text-center mb-12"><h1 className="text-5xl text-white mb-2 tracking-[0.1em] text-shadow-neon" style={{fontWeight: 900}}>騫紀錄</h1><div className="text-3xl font-num font-bold text-cyber-neon tracking-[0.2em] mb-2" style={{textShadow: '0 0 10px rgba(0,243,255,0.8)'}}>CLAW</div><div className="h-px w-24 bg-gradient-to-r from-transparent via-cyber-pink to-transparent mx-auto mb-2"></div><p className="text-gray-400 font-num text-xs tracking-[0.3em] uppercase">SYSTEM v4.6 HK</p></div>
                         <div className="glass-panel p-8 rounded-2xl border border-cyber-neon/30 shadow-[0_0_80px_rgba(0,243,255,0.1)]">
                             {errorMsg && <div className="mb-4 p-3 bg-red-900/40 border-l-2 border-red-500 text-red-200 text-xs text-center tracking-wide">{errorMsg}</div>}
                             <button onClick={onGoogleLogin} className="w-full py-4 mb-6 bg-white text-gray-900 font-extrabold hover:bg-gray-100 transition-all duration-300 rounded flex items-center justify-center gap-3 shadow-lg group relative overflow-hidden tracking-widest"><div className="absolute inset-0 bg-cyber-neon/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="G" /><span className="relative z-10">Google 登入</span></button>
@@ -427,14 +433,126 @@
             const [clockedIn, setClockedIn] = React.useState(false);
             const [startTime, setStartTime] = React.useState(null);
             const [accruedWage, setAccruedWage] = React.useState(0);
-            React.useEffect(() => { const t = setInterval(() => { const currentTime = new Date(); setNow(currentTime); if (clockedIn && startTime) { const diffMs = currentTime - startTime; const diffHours = diffMs / (1000 * 60 * 60); const roundedHours = Math.ceil(diffHours / 0.5) * 0.5; const finalHours = roundedHours === 0 ? 0.5 : roundedHours; setAccruedWage(finalHours * 50); } }, 1000); return () => clearInterval(t); }, [clockedIn, startTime]);
-            const handleClockToggle = async () => { if (!clockedIn) { const start = new Date(); setStartTime(start); setClockedIn(true); setAccruedWage(25); playConfirmSound(); const statusData = { isClockedIn: true, startTime: start.toISOString() }; if (user.type === 'guest') localStorage.setItem('hk_cyber_clock_status', JSON.stringify(statusData)); else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').set(statusData); onClockAction('打卡成功：已上班'); } else { playClickSound(); onClockAction(`打卡成功：已下班 (本次薪資: HK$ ${accruedWage})`); const record = { catId: 'checkin', categoryName: '打卡', amount: accruedWage, title: '打卡薪資', details: { wage: accruedWage } }; onSaveRecord(record); setClockedIn(false); setStartTime(null); setAccruedWage(0); if (user.type === 'guest') localStorage.removeItem('hk_cyber_clock_status'); else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').delete(); } };
+            const [isSyncing, setIsSyncing] = React.useState(true); // New loading state
+
+            // Cloud Sync Logic
+            React.useEffect(() => {
+                setIsSyncing(true); // Start syncing
+                let unsubscribe;
+
+                if (user.type === 'guest') {
+                    const saved = localStorage.getItem('hk_cyber_clock_status');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        setClockedIn(true);
+                        setStartTime(new Date(data.startTime));
+                    }
+                    setIsSyncing(false);
+                } else if (user.type === 'firebase') {
+                    // Use onSnapshot for real-time updates and persistence check
+                    unsubscribe = db.collection('users').doc(user.uid).collection('settings').doc('clock_status')
+                        .onSnapshot((doc) => {
+                            if (doc.exists && doc.data().isClockedIn) {
+                                setClockedIn(true);
+                                setStartTime(new Date(doc.data().startTime));
+                            } else {
+                                setClockedIn(false);
+                                setStartTime(null);
+                            }
+                            setIsSyncing(false); // Sync done
+                        }, (error) => {
+                            console.error("Clock sync error:", error);
+                            setIsSyncing(false);
+                        });
+                }
+                return () => { if(unsubscribe) unsubscribe(); };
+            }, [user]);
+
+            React.useEffect(() => {
+                const t = setInterval(() => {
+                    const currentTime = new Date();
+                    setNow(currentTime);
+
+                    if (clockedIn && startTime) {
+                        const diffMs = currentTime - startTime;
+                        const diffHours = diffMs / (1000 * 60 * 60);
+                        const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
+                        const finalHours = roundedHours === 0 ? 0.5 : roundedHours;
+                        setAccruedWage(finalHours * 50);
+                    }
+                }, 1000);
+                return () => clearInterval(t);
+            }, [clockedIn, startTime]);
+
+            const handleClockToggle = async () => {
+                if (isSyncing) return; // Prevent action while syncing
+
+                if (!clockedIn) {
+                    const start = new Date();
+                    setStartTime(start);
+                    setClockedIn(true);
+                    setAccruedWage(25);
+                    playConfirmSound();
+                    
+                    const statusData = { isClockedIn: true, startTime: start.toISOString() };
+                    if (user.type === 'guest') localStorage.setItem('hk_cyber_clock_status', JSON.stringify(statusData));
+                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').set(statusData);
+                    
+                    onClockAction('打卡成功：已上班');
+                } else {
+                    playClickSound();
+                    onClockAction(`打卡成功：已下班 (本次薪資: HK$ ${accruedWage})`);
+                    
+                    const record = {
+                        catId: 'checkin',
+                        categoryName: '打卡',
+                        amount: accruedWage,
+                        title: '打卡薪資',
+                        details: { wage: accruedWage }
+                    };
+                    onSaveRecord(record);
+
+                    setClockedIn(false);
+                    setStartTime(null);
+                    setAccruedWage(0);
+                    if (user.type === 'guest') localStorage.removeItem('hk_cyber_clock_status');
+                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').delete();
+                }
+            };
+
             const formatTime = (date) => date.toLocaleTimeString('en-US', {hour12: false});
+            
             return (
                 <div className="h-full flex flex-col items-center pt-12 px-6 animate-fade-in pb-24">
-                    <div className={`relative w-72 h-72 flex items-center justify-center rounded-full bg-black shadow-[0_0_60px_rgba(0,243,255,0.1)] mb-10 border border-white/5 transition-all duration-500 ${clockedIn ? 'shadow-[0_0_80px_rgba(0,243,255,0.3)] border-cyber-neon/30' : ''}`}><div className={`absolute inset-0 rounded-full border border-cyber-neon/20 border-dashed animate-spin-slow ${clockedIn ? 'duration-3s' : ''}`}></div><div className="absolute inset-4 rounded-full border border-cyber-pink/10 border-dotted animate-spin-slow" style={{animationDirection:'reverse', animationDuration:'20s'}}></div><div className="text-center z-10"><div className="text-cyber-pink text-[12px] mb-2 tracking-widest font-bold">{user.displayName || '操作員'}</div><div className="text-5xl font-num font-bold text-white tracking-widest text-shadow-neon w-56">{formatTime(now)}</div><div className="text-gray-500 text-sm mt-3 tracking-widest font-num">{now.toLocaleDateString()}</div>{clockedIn && <div className="text-cyber-neon text-[10px] mt-1 tracking-widest animate-pulse">開始時間: {startTime?.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>}</div></div>
-                    {clockedIn && <div className="w-full space-y-4 mb-8 animate-slide-up"><div className="glass-panel p-5 rounded-xl border-l-4 border-cyber-neon flex flex-col items-center justify-center bg-cyber-neon/5"><span className="text-cyber-neon text-xs tracking-widest font-bold mb-1 uppercase">即時累計薪資 (Current Accrued)</span><span className="text-white font-num font-bold text-4xl text-shadow-neon">HK$ {accruedWage}</span></div></div>}
-                    <button onClick={handleClockToggle} className={`w-full py-6 rounded-lg font-bold text-2xl tracking-widest transition-all shadow-xl ${clockedIn ? 'bg-cyber-pink text-black hover:bg-white hover:text-black shadow-[0_0_30px_rgba(255,0,255,0.4)]' : 'bg-transparent border border-cyber-neon text-cyber-neon hover:bg-cyber-neon hover:text-black shadow-[0_0_20px_rgba(0,243,255,0.2)]'}`}>{clockedIn ? '下班 (CLOCK OUT)' : '上班 (CLOCK IN)'}</button>
+                    <div className={`relative w-72 h-72 flex items-center justify-center rounded-full bg-black shadow-[0_0_60px_rgba(0,243,255,0.1)] mb-10 border border-white/5 transition-all duration-500 ${clockedIn ? 'shadow-[0_0_80px_rgba(0,243,255,0.3)] border-cyber-neon/30' : ''}`}>
+                        <div className={`absolute inset-0 rounded-full border border-cyber-neon/20 border-dashed animate-spin-slow ${clockedIn ? 'duration-3s' : ''}`}></div>
+                        <div className="absolute inset-4 rounded-full border border-cyber-pink/10 border-dotted animate-spin-slow" style={{animationDirection:'reverse', animationDuration:'20s'}}></div>
+                        <div className="text-center z-10">
+                            <div className="text-cyber-pink text-[12px] mb-2 tracking-widest font-bold">{user.displayName || '操作員'}</div>
+                            <div className="text-5xl font-num font-bold text-white tracking-widest text-shadow-neon w-56">{formatTime(now)}</div>
+                            <div className="text-gray-500 text-sm mt-3 tracking-widest font-num">{now.toLocaleDateString()}</div>
+                            {clockedIn && <div className="text-cyber-neon text-[10px] mt-2 tracking-widest animate-pulse font-bold">開始時間: {startTime?.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>}
+                            {isSyncing && <div className="text-gray-400 text-[10px] mt-2 tracking-widest animate-pulse">正在同步雲端狀態...</div>}
+                        </div>
+                    </div>
+                    
+                    {clockedIn ? (
+                        <div className="w-full space-y-4 mb-8 animate-slide-up">
+                            <div className="glass-panel p-5 rounded-xl border-l-4 border-cyber-neon flex flex-col items-center justify-center bg-cyber-neon/5">
+                                <span className="text-cyber-neon text-xs tracking-widest font-bold mb-1 uppercase">即時累計薪資 (Current Accrued)</span>
+                                <span className="text-white font-num font-bold text-4xl text-shadow-neon">HK$ {accruedWage}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        // Empty div to maintain spacing if needed, or nothing
+                        <div className="h-20"></div>
+                    )}
+                    
+                    {!isSyncing && (
+                        <button onClick={handleClockToggle} className={`w-full py-6 rounded-lg font-bold text-2xl tracking-widest transition-all shadow-xl ${clockedIn ? 'bg-cyber-pink text-black hover:bg-white hover:text-black shadow-[0_0_30px_rgba(255,0,255,0.4)]' : 'bg-transparent border border-cyber-neon text-cyber-neon hover:bg-cyber-neon hover:text-black shadow-[0_0_20px_rgba(0,243,255,0.2)]'}`}>
+                            {clockedIn ? '下班 (CLOCK OUT)' : '上班 (CLOCK IN)'}
+                        </button>
+                    )}
                 </div>
             );
         };
@@ -457,7 +575,6 @@
             );
         };
 
-        // --- FIXED RECORD FORM MODAL ---
         const RecordFormModal = ({ isOpen, onClose, categories, initialData, initialCatId, customSources, onSave, onRequestDelete }) => {
             if (!isOpen) return null;
             
@@ -604,8 +721,8 @@
                     else { db.collection('users').doc(user.uid).collection('records').doc(editingRecord.id).update(updatedFields); }
                     triggerNotification('紀錄已更新');
                 } else {
-                    // recordData.date is already handled inside Modal
-                    if (user.type === 'guest') { const up = [{id:Date.now(), ...recordData}, ...records]; setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                    const newRecord = { date: new Date().toISOString(), ...recordData };
+                    if (user.type === 'guest') { const up = [{id:Date.now(), ...newRecord}, ...records]; setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
                     else { db.collection('users').doc(user.uid).collection('records').add(recordData); }
                     triggerNotification('新紀錄已儲存');
                 }
