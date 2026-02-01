@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>騫紀錄公仔機系統 v5.0 (Full Feature)</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js (Stable UMD Version) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#020205',
+                            dark: '#0e0e14',
+                            neon: '#00f3ff',
+                            pink: '#ff00ff',
+                            yellow: '#fcee0a',
+                            glass: 'rgba(20, 20, 30, 0.85)',
+                            glassBorder: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', '"PingFang HK"', '"Microsoft JhengHei"', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'], 
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'pop-up': 'popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'island-in': 'islandIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 15px rgba(0,243,255,0.2)' },
+                            '50%': { opacity: .7, boxShadow: '0 0 25px rgba(255,0,255,0.2)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 },
+                        },
+                        popUp: {
+                            '0%': { transform: 'scale(0.9) translateY(20px)', opacity: 0 },
+                            '100%': { transform: 'scale(1) translateY(0)', opacity: 1 },
+                        },
+                        islandIn: {
+                            '0%': { transform: 'translate(-50%, -150%) scale(0.8)', opacity: 0 },
+                            '100%': { transform: 'translate(-50%, 0) scale(1)', opacity: 1 },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #020205;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            font-family: "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
+            font-weight: 500; 
+        }
+
+        .font-num { font-family: 'Rajdhani', sans-serif; }
+        .text-shadow-neon { text-shadow: 0 0 15px rgba(0, 243, 255, 0.4), 0 0 5px rgba(0, 243, 255, 0.8); }
+        .text-shadow-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.4), 0 0 5px rgba(255, 0, 255, 0.8); }
+        h1, h2, button { font-weight: 700 !important; letter-spacing: 0.03em; }
+        
+        /* Date Picker Dark Mode */
+        ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a12; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f3ff; }
+
+        .glass-panel {
+            background: rgba(14, 14, 20, 0.9);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .input-cyber { background: rgba(0,0,0,0.6); border-bottom: 2px solid #333; color: #fff; transition: all 0.3s ease; }
+        .input-cyber:focus { border-color: #00f3ff; background: rgba(0, 243, 255, 0.05); outline: none; }
+        .keypad-btn:active { transform: scale(0.96); background: rgba(0, 243, 255, 0.15); border-color: #00f3ff; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-through-cyber { text-decoration: line-through; text-decoration-color: #666; text-decoration-thickness: 2px; opacity: 0.6; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .folder-arrow { transition: transform 0.2s; }
+        details[open] .folder-arrow { transform: rotate(90deg); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- CONFIG & VERSION ---
+        const APP_VERSION = "v5.0.KIEN-CLAW";
+        
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyC2mm7_vjrJMUekBShe3BH6VdoPRt-yZqI",
+          authDomain: "hinesrc-25cee.firebaseapp.com",
+          projectId: "hinesrc-25cee",
+          storageBucket: "hinesrc-25cee.firebasestorage.app",
+          messagingSenderId: "873846921584",
+          appId: "1:873846921584:web:079586988dee370cc957b5",
+          measurementId: "G-TQRKF54G4F"
+        };
+
+        let auth, db, googleProvider, analytics;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            auth = firebase.auth();
+            db = firebase.firestore();
+            analytics = firebase.analytics();
+            googleProvider = new firebase.auth.GoogleAuthProvider();
+        } catch (e) {
+            console.error("Firebase init failed:", e);
+        }
+
+        // --- AUDIO UTILS ---
+        const playClickSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.05); gain.gain.setValueAtTime(0.03, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05); } catch(e) {} };
+        const playConfirmSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(400, ctx.currentTime); osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.08, ctx.currentTime); gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
+        const playAlertSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, ctx.currentTime); osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.2); gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.2); } catch(e) {} };
+
+        // --- BASIC COMPONENTS ---
+
+        const NavBtn = ({ icon, label, active, onClick }) => (
+            <button onClick={onClick} className={`flex flex-col items-center gap-1.5 p-2 transition-all duration-300 ${active ? 'text-cyber-neon -translate-y-2' : 'text-gray-500 hover:text-white'}`}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shadow-lg transition-all ${active ? 'bg-cyber-neon/10 shadow-[0_0_20px_rgba(0,243,255,0.2)] border border-cyber-neon' : 'bg-transparent border border-transparent'}`}><i className={`fas ${icon}`}></i></div>
+                <span className="text-[11px] tracking-wide scale-90 font-bold">{label}</span>
+            </button>
+        );
+
+        const DynamicNotification = ({ notification }) => {
+            if (!notification) return null;
+            const isSuccess = notification.type === 'success';
+            const icon = isSuccess ? 'fa-check-circle' : 'fa-info-circle';
+            const colorClass = isSuccess ? 'text-green-400' : 'text-cyber-neon';
+            return (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-island-in pointer-events-none">
+                    <div className="bg-black border border-white/10 px-6 py-3 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.8)] flex items-center gap-3 backdrop-blur-md relative overflow-hidden min-w-[200px] justify-center">
+                        <div className={`absolute inset-0 opacity-20 ${isSuccess ? 'bg-green-500' : 'bg-cyber-neon'} blur-xl`}></div>
+                        <div className="relative z-10 flex items-center gap-3"><i className={`fas ${icon} ${colorClass} text-lg`}></i><span className="text-white font-bold text-sm tracking-wide">{notification.message}</span></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SystemDialog = ({ isOpen, type, title, message, onConfirm, onCancel }) => {
+            if (!isOpen) return null;
+            const isDanger = type === 'danger';
+            return (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in p-6">
+                    <div className={`w-full max-w-sm glass-panel border ${isDanger ? 'border-cyber-pink/50 shadow-[0_0_50px_rgba(255,0,255,0.2)]' : 'border-cyber-neon/30 shadow-[0_0_50px_rgba(0,243,255,0.2)]'} rounded-xl p-6 text-center animate-pop-up relative overflow-hidden`}>
+                        <div className={`absolute inset-0 opacity-10 ${isDanger ? 'bg-cyber-pink animate-pulse' : 'bg-cyber-neon'}`}></div>
+                        <div className="relative z-10">
+                            <div className="mb-4"><i className={`fas ${isDanger ? 'fa-exclamation-triangle text-cyber-pink' : 'fa-info-circle text-cyber-neon'} text-5xl mb-2 drop-shadow-md`}></i></div>
+                            <h3 className="text-xl font-bold text-white mb-2 tracking-widest uppercase">{title}</h3>
+                            <p className="text-gray-300 text-sm mb-8 tracking-wide leading-relaxed font-medium">{message}</p>
+                            <div className="flex gap-3">
+                                {type !== 'alert' && <button onClick={() => { playClickSound(); onCancel(); }} className="flex-1 py-3.5 rounded border border-gray-600 text-gray-400 font-bold hover:bg-white/10 hover:text-white transition-all tracking-widest text-sm">取消</button>}
+                                <button onClick={() => { if(isDanger) playAlertSound(); else playConfirmSound(); onConfirm(); }} className={`flex-1 py-3.5 rounded font-bold transition-all shadow-lg tracking-widest text-sm ${isDanger ? 'bg-cyber-pink text-black hover:bg-white hover:text-black shadow-[0_0_15px_rgba(255,0,255,0.4)]' : 'bg-cyber-neon text-black hover:bg-white hover:text-black shadow-[0_0_15px_rgba(0,243,255,0.4)]'}`}>{type === 'alert' ? '了解' : (isDanger ? '確認執行' : '確定')}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MechKeypad = ({ onInput, onDelete, onConfirm, value, confirmText = "確認 / 儲存", confirmColor = "bg-cyber-neon" }) => {
+            const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'];
+            return (
+                <div className="w-full">
+                    <div className="mb-4 text-right px-1"><span className="text-3xl font-num text-cyber-neon font-bold tracking-widest border-b border-cyber-neon/30 pb-1 block text-shadow-neon"><span className="text-sm text-gray-500 mr-2 align-top font-sans">$</span>{value || '0'}</span></div>
+                    <div className="grid grid-cols-3 gap-2">
+                        {keys.map(k => (<button key={k} onClick={() => { playClickSound(); k === 'DEL' ? onDelete() : onInput(k); }} className={`h-12 rounded glass-panel font-num text-xl font-medium transition-all duration-100 keypad-btn ${k === 'DEL' ? 'text-cyber-pink border-cyber-pink/20' : 'text-gray-200 border-white/5'}`}>{k === 'DEL' ? <i className="fas fa-backspace"></i> : k}</button>))}
+                        <button onClick={() => { playConfirmSound(); onConfirm(); }} className={`col-span-3 h-12 text-black font-extrabold text-lg tracking-widest rounded shadow-[0_0_20px_rgba(0,243,255,0.4)] active:scale-95 transition-transform mt-1 ${confirmColor}`}>{confirmText}</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const LoginScreen = ({ onGoogleLogin, onEmailLogin, onEmailRegister, onGuest, errorMsg }) => {
+            const [isRegister, setIsRegister] = React.useState(false);
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+            const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); try { if (isRegister) await onEmailRegister(email, password); else await onEmailLogin(email, password); } catch (err) { setLoading(false); } };
+            return (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cyber-black/95 backdrop-blur-xl animate-fade-in px-6">
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1535295972055-1c762f4483e5?q=80&w=2071&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none mix-blend-screen"></div>
+                    <div className="relative z-10 w-full max-w-sm">
+                        <div className="text-center mb-12"><h1 className="text-5xl text-white mb-2 tracking-[0.1em] text-shadow-neon" style={{fontWeight: 900}}>騫紀錄</h1><div className="text-3xl font-num font-bold text-cyber-neon tracking-[0.2em] mb-2" style={{textShadow: '0 0 10px rgba(0,243,255,0.8)'}}>CLAW</div><div className="h-px w-24 bg-gradient-to-r from-transparent via-cyber-pink to-transparent mx-auto mb-2"></div><p className="text-gray-400 font-num text-xs tracking-[0.3em] uppercase">SYSTEM v5.0 HK</p></div>
+                        <div className="glass-panel p-8 rounded-2xl border border-cyber-neon/30 shadow-[0_0_80px_rgba(0,243,255,0.1)]">
+                            {errorMsg && <div className="mb-4 p-3 bg-red-900/40 border-l-2 border-red-500 text-red-200 text-xs text-center tracking-wide">{errorMsg}</div>}
+                            <button onClick={onGoogleLogin} className="w-full py-4 mb-6 bg-white text-gray-900 font-extrabold hover:bg-gray-100 transition-all duration-300 rounded flex items-center justify-center gap-3 shadow-lg group relative overflow-hidden tracking-widest"><div className="absolute inset-0 bg-cyber-neon/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="G" /><span className="relative z-10">Google 登入</span></button>
+                            <div className="relative mb-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700"></div></div><div className="relative flex justify-center text-xs"><span className="px-3 bg-[#13131b] text-gray-500 font-medium tracking-widest">或電子郵件</span></div></div>
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-4 bg-black/40 border-b-2 border-gray-700 text-white focus:border-cyber-neon outline-none transition-all placeholder-gray-600 text-base tracking-wide rounded-t font-medium" placeholder="輸入電子郵件..." />
+                                <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-4 bg-black/40 border-b-2 border-gray-700 text-white focus:border-cyber-neon outline-none transition-all placeholder-gray-600 text-base tracking-wide rounded-t font-medium" placeholder="輸入密碼..." />
+                                <button type="submit" disabled={loading} className="w-full py-4 mt-4 bg-cyber-neon text-black font-extrabold text-lg hover:bg-white transition-all duration-300 rounded tracking-[0.2em] relative overflow-hidden shadow-[0_0_20px_rgba(0,243,255,0.3)]">{loading ? <i className="fas fa-circle-notch fa-spin"></i> : (isRegister ? "註冊帳號" : "進入系統")}</button>
+                            </form>
+                            <div className="mt-6 text-center"><button onClick={() => { playClickSound(); setIsRegister(!isRegister); }} className="text-xs text-gray-500 hover:text-cyber-pink transition-colors tracking-widest border-b border-transparent hover:border-cyber-pink pb-1">{isRegister ? "返回登入" : "建立新帳號"}</button></div>
+                        </div>
+                        <div className="mt-12 text-center"><button onClick={onGuest} className="text-gray-600 text-xs tracking-[0.15em] hover:text-white transition-colors uppercase font-medium"><i className="fas fa-hdd mr-1"></i> 訪客模式 (本機儲存)</button></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HistoryList = ({ records, filterId, onRecordClick, onToggleRefund, typeFilter }) => {
+            let filteredRecords = filterId ? records.filter(r => r.catId === filterId) : records;
+            if (typeFilter === 'income') filteredRecords = filteredRecords.filter(r => { let amt = r.amount; if (r.catId === 'kwun' && r.amount < 0 && r.refundIsIncome) amt = Math.abs(r.amount); return amt > 0; });
+            else if (typeFilter === 'expense') filteredRecords = filteredRecords.filter(r => { if (r.catId === 'kwun' && r.amount < 0 && r.refundIsIncome) return false; return r.amount < 0; });
+            if (filteredRecords.length === 0) return <div className="flex flex-col items-center justify-center py-10 opacity-30 animate-fade-in"><i className="fas fa-cube text-4xl mb-2 text-gray-500"></i><span className="text-xs text-gray-400 tracking-widest">無數據</span></div>;
+            filteredRecords.sort((a,b) => new Date(b.date) - new Date(a.date));
+            const grouped = filteredRecords.reduce((acc, r) => {
+                const d = new Date(r.date);
+                const y = d.getFullYear();
+                const m = d.getMonth() + 1;
+                if (!acc[y]) acc[y] = {};
+                if (!acc[y][m]) acc[y][m] = [];
+                acc[y][m].push(r);
+                return acc;
+            }, {});
+            const years = Object.keys(grouped).sort((a,b)=>b-a);
+            const latestYear = years[0];
+            const latestMonth = latestYear ? Object.keys(grouped[latestYear]).sort((a,b)=>b-a)[0] : null;
+
+            return (
+                <div className="space-y-4 pb-28">
+                    {years.map(year => (
+                        <div key={year} className="animate-slide-up">
+                            <div className="flex items-center gap-2 mb-2 px-1 opacity-80"><i className="fas fa-folder text-cyber-neon text-sm"></i><span className="text-sm font-num font-bold text-white tracking-widest">{year} 年</span><div className="h-px bg-white/10 flex-1 ml-2"></div></div>
+                            <div className="space-y-2 pl-3 border-l border-white/5 ml-1.5">
+                                {Object.keys(grouped[year]).sort((a,b)=>b-a).map(month => {
+                                    const isOpen = (year === latestYear && month === latestMonth);
+                                    const monthTotal = grouped[year][month].reduce((sum, r) => { let val = r.amount; if (r.catId === 'kwun' && r.amount < 0 && r.isOffset) val = 0; return sum + (val || 0); }, 0);
+                                    return (
+                                        <details key={month} className="group" open={isOpen}>
+                                            <summary className="list-none cursor-pointer flex items-center justify-between p-3 glass-panel rounded-lg border-l-2 border-transparent hover:border-l-cyber-neon transition-all mb-2"><div className="flex items-center gap-3"><i className="fas fa-folder-open text-cyber-pink text-xs folder-arrow transform transition-transform group-open:rotate-90"></i><span className="font-num font-bold text-base text-white">{month} 月</span></div><span className="text-xs font-num font-bold text-gray-400 bg-black/40 px-2 py-1 rounded">HK$ {monthTotal.toLocaleString()}</span></summary>
+                                            <div className="pl-2 space-y-2 mb-2">
+                                                {grouped[year][month].map(r => {
+                                                    let isKwunRefund = r.catId === 'kwun' && r.amount < 0; let isOffset = isKwunRefund && r.isOffset; let displayDate = new Date(r.date).toLocaleDateString('zh-HK', {day:'2-digit'});
+                                                    return (
+                                                        <div key={r.id} className="flex justify-between items-center p-3 bg-white/5 border-l-2 border-white/10 rounded hover:bg-white/10 transition-all cursor-pointer active:scale-95">
+                                                            <div onClick={() => onRecordClick && onRecordClick(r)} className="flex-1 pr-2"><div className="flex items-center gap-2 mb-1"><span className="text-[9px] text-gray-400 font-num bg-white/5 px-1.5 rounded">{displayDate}日</span><span className="text-gray-200 font-bold text-sm line-clamp-1">{r.title || r.category}</span>{isOffset && <span className="text-[9px] bg-gray-700 text-gray-300 px-1 rounded">已抵消</span>}</div>{r.details && Object.keys(r.details).length > 0 && <div className="text-[10px] text-gray-500 truncate max-w-[200px]">{Object.entries(r.details).map(([k,v]) => {let kn=k; if(k==='upper') kn='上'; if(k==='lower') kn='下'; if(k==='income') kn='收'; if(k==='refund') kn='退'; if(k==='videoCount') kn='數'; if(k==='productName') kn='品'; if(k==='wage') kn='薪資'; return `${kn}:${v}`;}).join(' ')}</div>}</div>
+                                                            <div className="flex items-center gap-3"><div className={`font-num font-bold text-base ${isOffset ? 'text-gray-500 line-through-cyber' : (r.amount >= 0 ? 'text-cyber-neon' : 'text-cyber-pink')}`}>{r.amount > 0 ? '+' : ''}{r.amount}</div>{isKwunRefund && <button onClick={(e) => { e.stopPropagation(); onToggleRefund && onToggleRefund(r); }} className={`w-7 h-7 rounded-full border flex items-center justify-center ${isOffset ? 'bg-gray-700 text-white border-gray-600' : 'bg-transparent text-gray-500 border-gray-700 hover:text-white'}`}><i className={`fas ${isOffset ? 'fa-undo' : 'fa-ban'} text-[10px]`}></i></button>}<div onClick={() => onRecordClick && onRecordClick(r)}><i className="fas fa-chevron-right text-gray-600 text-[10px]"></i></div></div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </details>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const AnnualReportModal = ({ isOpen, onClose, year, records }) => {
+            if (!isOpen) return null;
+            const yearlyRecords = records.filter(r => new Date(r.date).getFullYear() === year);
+            let totalIncome = 0, totalExpense = 0, camelIncome = 0, kwunIncome = 0, reelsIncome = 0, checkinSalary = 0, stockExpense = 0;
+            yearlyRecords.forEach(r => {
+                const amount = r.amount;
+                if (amount > 0) {
+                    totalIncome += amount;
+                    if (r.catId === 'camel') camelIncome += amount;
+                    if (r.catId === 'kwun') kwunIncome += amount;
+                    if (r.catId === 'reels') reelsIncome += amount;
+                    if (r.catId === 'checkin') checkinSalary += amount; 
+                } else if (amount < 0) {
+                    if (r.catId === 'kwun') {
+                        if (!r.isOffset) { totalExpense += Math.abs(amount); kwunIncome += amount; }
+                    } else {
+                        totalExpense += Math.abs(amount);
+                        if (r.catId === 'stock') stockExpense += Math.abs(amount);
+                    }
+                }
+            });
+            const netProfit = totalIncome - totalExpense;
+            return (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-4 overflow-y-auto">
+                    <div className="w-full max-w-lg min-h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-8"><div><h2 className="text-4xl font-num font-bold text-white text-shadow-neon">{year}</h2><p className="text-cyber-neon text-xs tracking-[0.3em] uppercase">ANNUAL REPORT</p></div><button onClick={onClose} className="w-12 h-12 rounded-full border border-gray-700 text-gray-400 flex items-center justify-center hover:bg-white hover:text-black transition-colors"><i className="fas fa-times text-xl"></i></button></div>
+                        <div className="glass-panel p-6 rounded-2xl border border-cyber-neon/40 shadow-[0_0_50px_rgba(0,243,255,0.15)] mb-6 text-center"><h3 className="text-gray-400 text-xs tracking-widest uppercase mb-2 font-bold">年度淨盈餘</h3><div className={`text-5xl font-num font-bold ${netProfit >= 0 ? 'text-white text-shadow-neon' : 'text-cyber-pink text-shadow-pink'}`}>HK$ {netProfit.toLocaleString()}</div></div>
+                        <div className="grid grid-cols-2 gap-4 mb-6"><div className="bg-white/5 rounded-xl p-4 border-l-4 border-green-400"><div className="text-xs text-gray-400 mb-1">總收入</div><div className="text-2xl font-num font-bold text-green-400">HK$ {totalIncome.toLocaleString()}</div></div><div className="bg-white/5 rounded-xl p-4 border-l-4 border-cyber-pink"><div className="text-xs text-gray-400 mb-1">總支出</div><div className="text-2xl font-num font-bold text-cyber-pink">HK$ {totalExpense.toLocaleString()}</div></div></div>
+                        <div className="space-y-3 flex-1">
+                            <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg border border-white/5"><div className="flex items-center gap-3"><i className="fas fa-building text-cyber-neon w-6 text-center"></i> <span>駱駝漆總收</span></div><div className="font-num font-bold text-white">HK$ {camelIncome.toLocaleString()}</div></div>
+                            <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg border border-white/5"><div className="flex items-center gap-3"><i className="fas fa-store text-yellow-400 w-6 text-center"></i> <span>觀塘廣場淨收</span></div><div className="font-num font-bold text-white">HK$ {kwunIncome.toLocaleString()}</div></div>
+                            <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg border border-white/5"><div className="flex items-center gap-3"><i className="fas fa-video text-purple-400 w-6 text-center"></i> <span>Reels 收益</span></div><div className="font-num font-bold text-white">HK$ {reelsIncome.toLocaleString()}</div></div>
+                            <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg border border-white/5"><div className="flex items-center gap-3"><i className="fas fa-box text-red-400 w-6 text-center"></i> <span>入貨成本</span></div><div className="font-num font-bold text-red-400">- HK$ {stockExpense.toLocaleString()}</div></div>
+                            <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg border border-white/5"><div className="flex items-center gap-3"><i className="fas fa-id-card-clip text-blue-400 w-6 text-center"></i> <span>打卡薪資</span></div><div className="font-num font-bold text-white">HK$ {checkinSalary.toLocaleString()}</div></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MonthSelectScreen = ({ onSelectMonth, onLogout, user, records }) => {
+            const [year, setYear] = React.useState(2026);
+            const [showAnnual, setShowAnnual] = React.useState(false);
+            const months = Array.from({length: 12}, (_, i) => i + 1);
+            return (
+                <div className="min-h-screen bg-[#020205] flex flex-col p-6 animate-fade-in relative">
+                    <div className="flex justify-between items-center mb-10"><div className="flex flex-col"><div className="flex items-center gap-2 mb-1"><i className="fas fa-user-circle text-cyber-neon text-xl"></i><span className="text-white font-bold text-sm tracking-wide">{user.email?.split('@')[0] || 'Guest'}</span></div><span className="text-[10px] text-gray-500 font-num tracking-widest bg-white/5 px-2 py-0.5 rounded w-fit">{APP_VERSION}</span></div><div className="flex gap-4"><button onClick={onLogout} className="w-10 h-10 rounded-full border border-gray-800 text-gray-500 hover:text-cyber-pink hover:border-cyber-pink transition-all flex items-center justify-center"><i className="fas fa-power-off"></i></button></div></div>
+                    <div className="text-center mb-8"><div className="flex items-center justify-center gap-6 mb-4"><button onClick={()=>setYear(y=>y-1)} className="text-gray-600 hover:text-white text-2xl"><i className="fas fa-chevron-left"></i></button><h1 className="text-6xl font-num font-bold text-white text-shadow-neon">{year}</h1><button onClick={()=>setYear(y=>y+1)} className="text-gray-600 hover:text-white text-2xl"><i className="fas fa-chevron-right"></i></button></div><p className="text-gray-500 text-xs tracking-[0.3em]">SELECT TIMELINE</p></div>
+                    <div className="grid grid-cols-3 gap-4 mb-8">{months.map(m => (<button key={m} onClick={() => { playClickSound(); onSelectMonth(year, m); }} className="aspect-square rounded-2xl glass-panel border border-white/5 hover:border-cyber-neon hover:bg-cyber-neon/10 hover:shadow-[0_0_20px_rgba(0,243,255,0.2)] transition-all flex flex-col items-center justify-center group"><span className="text-3xl font-num font-bold text-gray-300 group-hover:text-white mb-1">{m}</span><span className="text-[10px] text-gray-600 group-hover:text-cyber-neon tracking-widest uppercase">月</span></button>))}</div>
+                    <div className="mt-auto"><button onClick={() => { playConfirmSound(); setShowAnnual(true); }} className="w-full py-5 rounded-xl border border-cyber-pink/30 text-cyber-pink font-bold tracking-widest hover:bg-cyber-pink hover:text-black transition-all shadow-[0_0_20px_rgba(255,0,255,0.1)] flex items-center justify-center gap-3"><i className="fas fa-chart-line"></i> 查看年度總報表</button></div>
+                    <AnnualReportModal isOpen={showAnnual} onClose={()=>setShowAnnual(false)} year={year} records={records} />
+                </div>
+            );
+        };
+
+        const PieChart = ({ records }) => {
+            const chartRef = React.useRef(null);
+            const chartInstance = React.useRef(null);
+            const [view, setView] = React.useState('income');
+            const [hasError, setHasError] = React.useState(false);
+            React.useEffect(() => {
+                try {
+                    if (typeof Chart === 'undefined') { console.warn("Chart.js not loaded"); return; }
+                    if (!chartRef.current) return;
+                    if (records.length === 0) { if (chartInstance.current) { chartInstance.current.destroy(); chartInstance.current = null; } return; }
+                    const categories = { income: { 'camel': '駱駝漆', 'reels': 'Reels', 'kwun': '觀塘', 'checkin': '打卡' }, expense: { 'stock': '入貨', 'kwun': '觀塘退款' } };
+                    const dataMap = {};
+                    records.forEach(r => {
+                        let amount = r.amount;
+                        if (r.catId === 'kwun' && r.amount < 0 && r.isOffset) return; 
+                        if (view === 'income' && amount > 0) { const label = categories.income[r.catId] || r.category; dataMap[label] = (dataMap[label] || 0) + amount; } 
+                        else if (view === 'expense' && amount < 0) { const label = r.catId === 'kwun' ? '觀塘退款' : (categories.expense[r.catId] || r.category); dataMap[label] = (dataMap[label] || 0) + Math.abs(amount); }
+                    });
+                    const labels = Object.keys(dataMap);
+                    const dataValues = Object.values(dataMap);
+                    const colors = ['#00f3ff', '#ff00ff', '#fcee0a', '#00ff9d', '#ff4d4d', '#718096'];
+                    const ctx = chartRef.current.getContext('2d');
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    if (labels.length > 0) {
+                        chartInstance.current = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: colors, borderColor: '#000', borderWidth: 2, hoverOffset: 10 }] },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#fff', font: { family: 'Noto Sans TC' } } }, tooltip: { callbacks: { label: (c) => ` HK$ ${c.raw.toLocaleString()}` }, backgroundColor: 'rgba(0,0,0,0.9)', titleFont: { family: 'Noto Sans TC' }, bodyFont: { family: 'Rajdhani', size: 14 } } }, cutout: '70%' }
+                        });
+                    }
+                } catch (e) { console.error("Chart Render Error:", e); setHasError(true); }
+                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
+            }, [records, view]);
+            if (hasError) return <div className="h-48 flex items-center justify-center text-red-500 text-xs">圖表載入失敗</div>;
+            const hasData = records.some(r => (view === 'income' ? r.amount > 0 : (r.amount < 0 && !r.isOffset)));
+            return (
+                <div className="w-full">
+                    <div className="flex justify-center gap-4 mb-4"><button onClick={()=>setView('income')} className={`px-4 py-1 rounded-full text-xs font-bold transition-colors ${view==='income'?'bg-cyber-neon text-black':'text-gray-500 border border-gray-700'}`}>收入分佈</button><button onClick={()=>setView('expense')} className={`px-4 py-1 rounded-full text-xs font-bold transition-colors ${view==='expense'?'bg-cyber-pink text-black':'text-gray-500 border border-gray-700'}`}>支出分佈</button></div>
+                    <div className="h-48 relative">{hasData ? <canvas ref={chartRef}></canvas> : <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-xs">無數據</div>}</div>
+                </div>
+            );
+        };
+
+        const OverviewView = ({ records, balance, isLoading, onRecordClick, onToggleRefund, selectedPeriod, onSwitchMonth }) => {
+            const [filter, setFilter] = React.useState('all');
+            const monthlyRecords = records.filter(r => { const d = new Date(r.date); return d.getFullYear() === selectedPeriod.year && (d.getMonth() + 1) === selectedPeriod.month; });
+            const monthBalance = monthlyRecords.reduce((acc, curr) => { let val = curr.amount; if (curr.catId === 'kwun' && curr.amount < 0 && curr.isOffset) val = 0; return acc + (val || 0); }, 0);
+            const totalIncome = monthlyRecords.reduce((acc, r) => (r.amount > 0 ? acc + r.amount : acc), 0);
+            const totalExpense = monthlyRecords.reduce((acc, r) => { let val = 0; if (r.amount < 0) { if (r.catId === 'kwun' && r.isOffset) val = 0; else val = Math.abs(r.amount); } return acc + val; }, 0);
+            const handleFilterClick = (type) => { playClickSound(); setFilter(prev => prev === type ? 'all' : type); };
+            return (
+                <div className="pt-2 px-4 animate-fade-in pb-20">
+                    <div className="flex justify-between items-end mb-4 px-1"><div><div className="text-[10px] text-gray-500 tracking-widest mb-1">CURRENT PERIOD</div><div className="text-2xl font-num font-bold text-white flex items-center gap-2">{selectedPeriod.year} / {selectedPeriod.month} <span className="text-xs text-gray-600">月</span></div></div><button onClick={onSwitchMonth} className="text-xs text-cyber-neon border border-cyber-neon/30 px-3 py-1.5 rounded-full hover:bg-cyber-neon hover:text-black transition-colors"><i className="fas fa-calendar-alt mr-1"></i> 切換月份</button></div>
+                    <div className="glass-panel p-5 rounded-2xl relative overflow-hidden mb-4 border border-cyber-neon/30"><h2 className="text-cyber-neon text-xs tracking-widest uppercase mb-1 font-bold">本月淨資產</h2><div className={`text-4xl font-num font-bold tracking-tight mb-2 ${monthBalance >= 0 ? 'text-white text-shadow-neon' : 'text-cyber-pink text-shadow-pink'}`}><span className="text-xl align-top mr-1 opacity-50 font-sans">HK$</span>{monthBalance.toLocaleString()}</div>{isLoading && <div className="text-xs text-cyber-neon animate-pulse">數據同步中...</div>}</div>
+                    <div className="grid grid-cols-2 gap-3 mb-4"><div onClick={() => handleFilterClick('income')} className={`glass-panel p-3 rounded-xl border cursor-pointer ${filter === 'income' ? 'bg-cyber-neon/10 border-cyber-neon' : 'border-white/10'}`}><div className="text-[10px] text-green-400 font-bold mb-1">總收入</div><div className="text-lg font-num font-bold text-white">HK$ {totalIncome.toLocaleString()}</div></div><div onClick={() => handleFilterClick('expense')} className={`glass-panel p-3 rounded-xl border cursor-pointer ${filter === 'expense' ? 'bg-cyber-pink/10 border-cyber-pink' : 'border-white/10'}`}><div className="text-[10px] text-cyber-pink font-bold mb-1">總支出</div><div className="text-lg font-num font-bold text-white">HK$ {totalExpense.toLocaleString()}</div></div></div>
+                    <div className="glass-panel p-4 rounded-xl border border-white/5 mb-4"><PieChart records={monthlyRecords} /></div>
+                    <div className="flex items-center justify-between mb-3 px-1"><h3 className="text-xs text-gray-500 tracking-widest font-bold">{filter === 'all' ? '本月交易' : (filter === 'income' ? '本月收入' : '本月支出')}</h3>{filter !== 'all' && <button onClick={()=>setFilter('all')} className="ml-2 text-[10px] text-cyber-neon">清除過濾</button>}</div>
+                    <HistoryList records={monthlyRecords} onRecordClick={onRecordClick} onToggleRefund={onToggleRefund} typeFilter={filter} />
+                </div>
+            );
+        };
+
+        const SettingsModal = ({ isOpen, onClose, customSources, onAddSource, onDeleteSource, user }) => {
+            const [newSource, setNewSource] = React.useState('');
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+                    <div className="w-full max-w-md bg-[#0e0e14] border border-cyber-neon/30 rounded-2xl shadow-[0_0_50px_rgba(0,243,255,0.2)] flex flex-col overflow-hidden relative animate-pop-up">
+                        <div className="p-5 border-b border-white/10 flex justify-between items-center"><h3 className="text-lg font-bold text-white tracking-widest">系統設定</h3><button onClick={onClose}><i className="fas fa-times text-gray-400"></i></button></div>
+                        <div className="p-6">
+                            <div className="mb-8"><div className="text-[10px] text-gray-500 uppercase mb-2 tracking-wider font-bold">帳戶 ID</div><div className="text-white font-num text-sm truncate bg-white/5 p-3 rounded border border-white/5">{user.email || '訪客'}{user.type !== 'guest' && <span className="float-right text-cyber-neon"><i className="fas fa-check-circle"></i> 雲端</span>}</div></div>
+                            <h4 className="text-xs text-cyber-neon mb-3 tracking-widest font-bold">自訂支出來源</h4>
+                            <div className="flex gap-2 mb-4"><input type="text" value={newSource} onChange={e=>setNewSource(e.target.value)} placeholder="輸入新來源..." className="flex-1 bg-black/50 border border-gray-700 rounded p-3 text-white outline-none focus:border-cyber-neon font-medium" /><button onClick={()=>{if(newSource) {onAddSource(newSource); setNewSource('');}}} className="bg-cyber-neon text-black font-bold px-4 rounded hover:bg-white transition-colors">新增</button></div>
+                            <div className="flex flex-wrap gap-2">{customSources.map((s, i) => <div key={i} className="bg-white/10 text-xs px-3 py-1.5 rounded flex items-center gap-2 border border-white/5 text-gray-300 tracking-wide font-medium">{s}<button onClick={()=>onDeleteSource(i)} className="text-gray-500 hover:text-red-400"><i className="fas fa-times"></i></button></div>)}</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const RecordFormModal = ({ isOpen, onClose, categories, initialData, initialCatId, customSources, onSave, onRequestDelete }) => {
+            if (!isOpen) return null;
+            
+            const formatDateForInput = (dateObj) => {
+                const d = new Date(dateObj);
+                return d.toISOString().split('T')[0];
+            };
+
+            const targetCatId = initialData ? initialData.catId : (initialCatId || categories[0].id);
+            const [activeCatId, setActiveCatId] = React.useState(targetCatId);
+            const activeCat = categories.find(c => c.id === activeCatId) || categories[0];
+            const [inputVal, setInputVal] = React.useState('');
+            const [note, setNote] = React.useState('');
+            const [subInput1, setSubInput1] = React.useState('');
+            const [subInput2, setSubInput2] = React.useState('');
+            const [kwunTab, setKwunTab] = React.useState('income');
+            const [videoCount, setVideoCount] = React.useState(1);
+            const [productName, setProductName] = React.useState('');
+            const [recordDate, setRecordDate] = React.useState(formatDateForInput(new Date()));
+
+            React.useEffect(() => {
+                if (initialData && initialData.catId === activeCatId) {
+                    setNote(initialData.title || '');
+                    setRecordDate(formatDateForInput(initialData.date));
+                    if (activeCat.type === 'complex') { setSubInput1(initialData.details?.upper || ''); setSubInput2(initialData.details?.lower || ''); } 
+                    else if (activeCat.type === 'split') { if (initialData.details?.refund > 0) { setKwunTab('refund'); setInputVal(String(initialData.details.refund)); } else { setKwunTab('income'); setInputVal(String(initialData.details.income || 0)); } } 
+                    else if (activeCat.id === 'reels') { setVideoCount(initialData.details?.videoCount || (Math.abs(initialData.amount) / 25) || 1); } 
+                    else if (activeCat.id === 'stock') { setProductName(initialData.details?.productName || ''); setInputVal(String(Math.abs(initialData.amount))); } 
+                    else { setInputVal(String(Math.abs(initialData.amount))); }
+                } else {
+                    if (!initialData) { 
+                        if (initialCatId) setActiveCatId(initialCatId);
+                        setInputVal(''); setNote(''); setSubInput1(''); setSubInput2(''); setKwunTab('income'); 
+                        setVideoCount(1); setProductName(''); setRecordDate(formatDateForInput(new Date()));
+                    }
+                }
+            }, [activeCatId, initialData, initialCatId, isOpen]);
+
+            const handleSubmit = () => {
+                let amount = 0; let details = {};
+                if (activeCat.id === 'reels') { amount = videoCount * 25; details = { videoCount }; } 
+                else if (activeCat.type === 'complex') { amount = (parseFloat(subInput1) || 0) + (parseFloat(subInput2) || 0); details = { upper: subInput1, lower: subInput2 }; } 
+                else if (activeCat.type === 'split') { if (kwunTab === 'income') { amount = parseFloat(inputVal) || 0; details = { income: amount, refund: 0 }; } else { amount = -(parseFloat(inputVal) || 0); details = { income: 0, refund: Math.abs(amount) }; } } 
+                else if (activeCat.id === 'stock') { amount = -(parseFloat(inputVal) || 0); details = { productName }; } 
+                else { amount = parseFloat(inputVal) || 0; }
+                if (amount === 0 && !note) { playClickSound(); return; }
+
+                let finalDate;
+                if (initialData) {
+                    const oldDate = new Date(initialData.date);
+                    const newYMD = new Date(recordDate);
+                    oldDate.setFullYear(newYMD.getFullYear(), newYMD.getMonth(), newYMD.getDate());
+                    finalDate = oldDate.toISOString();
+                } else {
+                     const now = new Date();
+                     const selected = new Date(recordDate);
+                     selected.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                     finalDate = selected.toISOString();
+                }
+
+                const recordData = { catId: activeCat.id, categoryName: activeCat.name, amount, date: finalDate, title: note || (activeCat.id === 'kwun' ? (kwunTab === 'income' ? '收入' : '退款') : activeCat.name), details };
+                onSave(recordData); onClose();
+            };
+
+            const handleDeleteClick = () => { onRequestDelete && onRequestDelete(); };
+            const showCategorySwitcher = !initialData && !initialCatId;
+
+            return (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+                    <div className="w-full max-w-md bg-[#0e0e14] border border-cyber-neon/30 rounded-2xl shadow-[0_0_50px_rgba(0,243,255,0.2)] flex flex-col max-h-[90vh] overflow-hidden relative animate-pop-up">
+                        <div className="bg-white/5 border-b border-white/5 pt-2">
+                            <div className="flex items-center justify-between px-4 py-3"><span className="text-cyber-neon text-sm tracking-widest font-bold">{initialData ? '修改紀錄' : '新增紀錄'}</span><button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-colors"><i className="fas fa-times"></i></button></div>
+                            {showCategorySwitcher && <div className="flex overflow-x-auto gap-3 px-4 pb-3 no-scrollbar">{categories.filter(c => c.id !== 'checkin').map(cat => (<button key={cat.id} onClick={() => { playClickSound(); setActiveCatId(cat.id); }} className={`flex flex-col items-center min-w-[70px] p-2 rounded transition-all ${activeCatId === cat.id ? 'bg-cyber-neon text-black shadow-[0_0_15px_rgba(0,243,255,0.4)]' : 'bg-white/5 text-gray-500 border border-white/5'}`}><i className={`fas ${cat.icon} text-lg mb-1`}></i><span className="text-[10px] font-bold whitespace-nowrap">{cat.name}</span></button>))}</div>}
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 flex flex-col relative">
+                            <div className="absolute top-10 left-10 text-[10rem] text-white/5 font-num font-bold pointer-events-none -z-10">{activeCatId.substring(0,2).toUpperCase()}</div>
+                            <h2 className="text-3xl font-bold text-white mb-6 text-center tracking-widest text-shadow-neon">{activeCat.name}</h2>
+                            
+                            <div className="mb-6">
+                                <label className="text-xs text-gray-500 font-bold tracking-widest block mb-2">日期 (DATE)</label>
+                                <input type="date" value={recordDate} onChange={(e) => setRecordDate(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-3 text-white font-num text-lg outline-none focus:border-cyber-neon" />
+                            </div>
+
+                            {activeCat.id === 'reels' && <div className="space-y-6 mb-4"><input type="text" placeholder="影片標題 (TITLE)" value={note} onChange={e=>setNote(e.target.value)} className="w-full bg-transparent border-b border-gray-700 p-3 text-white focus:border-cyber-neon outline-none text-xl tracking-wide font-medium" /><div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10"><span className="text-gray-400 font-bold tracking-widest">影片數量</span><div className="flex items-center gap-4"><button onClick={()=>{if(videoCount>1) {playClickSound(); setVideoCount(c=>c-1);}}} className="w-10 h-10 rounded-full bg-cyber-pink/20 text-cyber-pink border border-cyber-pink flex items-center justify-center text-xl font-bold active:scale-95 transition-transform">-</button><span className="text-2xl font-num font-bold text-white w-8 text-center">{videoCount}</span><button onClick={()=>{playClickSound(); setVideoCount(c=>c+1);}} className="w-10 h-10 rounded-full bg-cyber-neon/20 text-cyber-neon border border-cyber-neon flex items-center justify-center text-xl font-bold active:scale-95 transition-transform">+</button></div></div><div className="p-4 bg-cyber-neon/5 rounded border border-cyber-neon/20 flex justify-between items-center"><div className="text-xs text-cyber-neon tracking-widest font-bold">預計收入</div><div className="text-white font-num text-3xl font-bold text-shadow-neon">HK$ {(videoCount * 25).toLocaleString()}</div></div></div>}
+                            {activeCat.id === 'camel' && <div className="flex gap-4 mb-6"><div className="flex-1"><label className="text-xs text-gray-500 block mb-2 tracking-widest font-bold">上層收入</label><input type="number" value={subInput1} onChange={e=>setSubInput1(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-4 text-cyber-neon font-num text-2xl text-right outline-none focus:border-cyber-neon" placeholder="0" /></div><div className="flex-1"><label className="text-xs text-gray-500 block mb-2 tracking-widest font-bold">下層收入</label><input type="number" value={subInput2} onChange={e=>setSubInput2(e.target.value)} className="w-full bg-white/5 border border-gray-700 rounded p-4 text-cyber-neon font-num text-2xl text-right outline-none focus:border-cyber-neon" placeholder="0" /></div></div>}
+                            {activeCat.id === 'kwun' && <div className="mb-6"><div className="flex border-b border-gray-800 mb-6"><button onClick={()=>setKwunTab('income')} className={`flex-1 pb-3 text-sm font-bold tracking-[0.2em] transition-all relative ${kwunTab==='income' ? 'text-cyber-neon' : 'text-gray-600'}`}>收入{kwunTab==='income' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyber-neon shadow-[0_0_10px_#00f3ff]"></div>}</button><button onClick={()=>setKwunTab('refund')} className={`flex-1 pb-3 text-sm font-bold tracking-[0.2em] transition-all relative ${kwunTab==='refund' ? 'text-cyber-pink' : 'text-gray-600'}`}>退款{kwunTab==='refund' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyber-pink shadow-[0_0_10px_#ff00ff]"></div>}</button></div><div className="text-center mb-4"><div className={`text-5xl font-num font-bold ${kwunTab==='income' ? 'text-cyber-neon text-shadow-neon' : 'text-cyber-pink text-shadow-pink'}`}>${inputVal || '0'}</div><div className="text-xs text-gray-500 mt-2 tracking-widest font-bold">{kwunTab === 'income' ? '輸入收入金額' : '輸入退款金額 (支出)'}</div></div></div>}
+                            {activeCat.id === 'stock' && <div className="mb-6 space-y-4"><input type="text" placeholder="商品名稱" value={productName} onChange={e=>setProductName(e.target.value)} className="w-full bg-transparent border-b border-gray-700 p-3 text-white focus:border-cyber-neon outline-none text-xl tracking-wide font-medium" />{customSources.length > 0 && <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar">{customSources.map(src => <button key={src} onClick={()=>setNote(src)} className="px-3 py-2 bg-white/5 rounded text-xs text-gray-300 border border-white/5 whitespace-nowrap hover:bg-cyber-neon hover:text-black tracking-wide transition-colors font-medium">{src}</button>)}</div>}<input type="text" placeholder="備註/來源" value={note} onChange={e=>setNote(e.target.value)} className="w-full bg-transparent border-b border-gray-700 p-3 text-white focus:border-cyber-neon outline-none text-lg tracking-wide font-medium" /></div>}
+                            <div className="flex-1"></div>
+                            {activeCat.id !== 'reels' && activeCat.id !== 'camel' && <MechKeypad value={inputVal} onInput={(k) => setInputVal(prev => prev + k)} onDelete={() => setInputVal(prev => prev.slice(0, -1))} onConfirm={handleSubmit} confirmText={activeCat.id === 'kwun' ? (kwunTab === 'income' ? '確認收入' : '確認退款 (支出)') : (initialData ? '儲存變更' : '儲存紀錄')} confirmColor={activeCat.id === 'kwun' && kwunTab === 'refund' ? 'bg-cyber-pink text-black' : 'bg-cyber-neon text-black'} />}
+                            {(activeCat.id === 'reels' || activeCat.id === 'camel') && <button onClick={handleSubmit} className="w-full py-5 bg-cyber-neon text-black font-extrabold tracking-[0.2em] rounded shadow-[0_0_20px_rgba(0,243,255,0.4)] active:scale-95 transition-transform text-xl mt-4">{initialData ? '儲存變更' : '儲存紀錄'}</button>}
+                            {initialData && <button onClick={handleDeleteClick} className="w-full py-3 mt-4 text-red-500 border border-red-500/30 rounded hover:bg-red-500/10 transition-colors font-bold tracking-widest text-sm"><i className="fas fa-trash-alt mr-2"></i> 刪除此紀錄</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ClockInView = ({ user, onClockAction, onSaveRecord, records, onRecordClick }) => {
+            const [now, setNow] = React.useState(new Date());
+            const [clockedIn, setClockedIn] = React.useState(false);
+            const [startTime, setStartTime] = React.useState(null);
+            const [accruedWage, setAccruedWage] = React.useState(0);
+            const [isSyncing, setIsSyncing] = React.useState(true);
+
+            // Cloud Sync Logic
+            React.useEffect(() => {
+                setIsSyncing(true);
+                let unsubscribe;
+
+                if (user.type === 'guest') {
+                    const saved = localStorage.getItem('hk_cyber_clock_status');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        setClockedIn(true);
+                        setStartTime(new Date(data.startTime));
+                        const now = new Date();
+                        const start = new Date(data.startTime);
+                        const diffMs = now - start;
+                        const diffHours = diffMs / (1000 * 60 * 60);
+                        const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
+                        const finalHours = roundedHours === 0 ? 0.5 : roundedHours; 
+                        setAccruedWage(finalHours * 50);
+                    }
+                    setIsSyncing(false);
+                } else if (user.type === 'firebase') {
+                    unsubscribe = db.collection('users').doc(user.uid).collection('settings').doc('clock_status')
+                        .onSnapshot((doc) => {
+                            if (doc.exists && doc.data().isClockedIn) {
+                                setClockedIn(true);
+                                const start = new Date(doc.data().startTime);
+                                setStartTime(start);
+                                const now = new Date();
+                                const diffMs = now - start;
+                                const diffHours = diffMs / (1000 * 60 * 60);
+                                const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
+                                const finalHours = roundedHours === 0 ? 0.5 : roundedHours; 
+                                setAccruedWage(finalHours * 50);
+                            } else {
+                                setClockedIn(false);
+                                setStartTime(null);
+                            }
+                            setIsSyncing(false); 
+                        }, (error) => {
+                            console.error("Clock sync error:", error);
+                            setIsSyncing(false);
+                        });
+                }
+                return () => { if(unsubscribe) unsubscribe(); };
+            }, [user]);
+
+            React.useEffect(() => {
+                const t = setInterval(() => {
+                    const currentTime = new Date();
+                    setNow(currentTime);
+
+                    if (clockedIn && startTime) {
+                        const diffMs = currentTime - startTime;
+                        const diffHours = diffMs / (1000 * 60 * 60);
+                        const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
+                        const finalHours = roundedHours === 0 ? 0.5 : roundedHours;
+                        setAccruedWage(finalHours * 50);
+                    }
+                }, 1000);
+                return () => clearInterval(t);
+            }, [clockedIn, startTime]);
+
+            const handleClockToggle = async () => {
+                if (isSyncing) return;
+
+                if (!clockedIn) {
+                    const start = new Date();
+                    setStartTime(start);
+                    setClockedIn(true);
+                    setAccruedWage(25);
+                    playConfirmSound();
+                    
+                    const statusData = { isClockedIn: true, startTime: start.toISOString() };
+                    if (user.type === 'guest') localStorage.setItem('hk_cyber_clock_status', JSON.stringify(statusData));
+                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').set(statusData);
+                    
+                    onClockAction('打卡成功：已上班');
+                } else {
+                    const end = new Date();
+                    const diffMs = end - startTime;
+                    const diffHours = diffMs / (1000 * 60 * 60);
+                    const roundedHours = Math.ceil(diffHours / 0.5) * 0.5;
+                    const finalHours = roundedHours === 0 ? 0.5 : roundedHours;
+                    const finalWage = finalHours * 50;
+
+                    playClickSound();
+                    onClockAction(`打卡成功：已下班 (本次薪資: HK$ ${finalWage})`);
+                    
+                    const record = {
+                        catId: 'checkin',
+                        categoryName: '打卡',
+                        amount: finalWage,
+                        title: '打卡薪資',
+                        details: { wage: finalWage }
+                    };
+                    onSaveRecord(record);
+
+                    setClockedIn(false);
+                    setStartTime(null);
+                    setAccruedWage(0);
+                    if (user.type === 'guest') localStorage.removeItem('hk_cyber_clock_status');
+                    else await db.collection('users').doc(user.uid).collection('settings').doc('clock_status').delete();
+                }
+            };
+
+            const formatTime = (date) => date.toLocaleTimeString('en-US', {hour12: false});
+            
+            return (
+                <div className="h-full flex flex-col items-center pt-12 px-6 animate-fade-in pb-24 overflow-y-auto">
+                    <div className={`relative w-72 h-72 flex items-center justify-center rounded-full bg-black shadow-[0_0_60px_rgba(0,243,255,0.1)] mb-10 border border-white/5 transition-all duration-500 ${clockedIn ? 'shadow-[0_0_80px_rgba(0,243,255,0.3)] border-cyber-neon/30' : ''}`}>
+                        <div className={`absolute inset-0 rounded-full border border-cyber-neon/20 border-dashed animate-spin-slow ${clockedIn ? 'duration-3s' : ''}`}></div>
+                        <div className="absolute inset-4 rounded-full border border-cyber-pink/10 border-dotted animate-spin-slow" style={{animationDirection:'reverse', animationDuration:'20s'}}></div>
+                        <div className="text-center z-10">
+                            <div className="text-cyber-pink text-[12px] mb-2 tracking-widest font-bold">{user.displayName || '操作員'}</div>
+                            <div className="text-5xl font-num font-bold text-white tracking-widest text-shadow-neon w-56">{formatTime(now)}</div>
+                            <div className="text-gray-500 text-sm mt-3 tracking-widest font-num">{now.toLocaleDateString()}</div>
+                            {clockedIn && <div className="text-cyber-neon text-[10px] mt-2 tracking-widest animate-pulse font-bold">開始時間: {startTime?.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>}
+                            {isSyncing && <div className="text-gray-400 text-[10px] mt-2 tracking-widest animate-pulse">正在同步雲端狀態...</div>}
+                        </div>
+                    </div>
+                    
+                    {clockedIn ? (
+                        <div className="w-full space-y-4 mb-8 animate-slide-up">
+                            <div className="glass-panel p-5 rounded-xl border-l-4 border-cyber-neon flex flex-col items-center justify-center bg-cyber-neon/5">
+                                <span className="text-cyber-neon text-xs tracking-widest font-bold mb-1 uppercase">即時累計薪資 (Current Accrued)</span>
+                                <span className="text-white font-num font-bold text-4xl text-shadow-neon">HK$ {accruedWage}</span>
+                            </div>
+                        </div>
+                    ) : (
+                         <div className="h-20"></div>
+                    )}
+                    
+                    {!isSyncing && (
+                        <button onClick={handleClockToggle} className={`w-full py-6 rounded-lg font-bold text-2xl tracking-widest transition-all shadow-xl ${clockedIn ? 'bg-cyber-pink text-black hover:bg-white hover:text-black shadow-[0_0_30px_rgba(255,0,255,0.4)]' : 'bg-transparent border border-cyber-neon text-cyber-neon hover:bg-cyber-neon hover:text-black shadow-[0_0_20px_rgba(0,243,255,0.2)]'}`}>
+                            {clockedIn ? '下班 (CLOCK OUT)' : '上班 (CLOCK IN)'}
+                        </button>
+                    )}
+
+                    {/* HISTORY SECTION FOR CLOCK IN */}
+                    <div className="w-full mt-10 border-t border-white/10 pt-6">
+                         <div className="flex items-center gap-2 mb-4 px-2">
+                             <i className="fas fa-history text-cyber-neon"></i>
+                             <span className="text-sm font-bold text-gray-400 tracking-widest uppercase">打卡紀錄</span>
+                         </div>
+                         <HistoryList 
+                            records={records} 
+                            filterId="checkin" 
+                            onRecordClick={onRecordClick} 
+                            typeFilter="all" 
+                         />
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [user, setUser] = React.useState(null);
+            const [view, setView] = React.useState('month_select'); 
+            const [selectedPeriod, setSelectedPeriod] = React.useState({ year: 2026, month: 1 });
+            const [records, setRecords] = React.useState([]);
+            const [balance, setBalance] = React.useState(0);
+            const [isLoading, setIsLoading] = React.useState(false);
+            const [authError, setAuthError] = React.useState('');
+            const [isSettingsOpen, setSettingsOpen] = React.useState(false);
+            const [isFormOpen, setFormOpen] = React.useState(false);
+            const [editingRecord, setEditingRecord] = React.useState(null); 
+            const [initialCatId, setInitialCatId] = React.useState(null);
+            const [customSources, setCustomSources] = React.useState(['淘寶', 'AEON', '深水埗']);
+            const [dialogConfig, setDialogConfig] = React.useState({ isOpen: false, type: 'confirm', title: '', message: '', onConfirm: () => {} });
+            const [notification, setNotification] = React.useState(null);
+
+            const categories = [
+                { id: 'camel', name: '駱駝漆', icon: 'fa-building', type: 'complex' },
+                { id: 'reels', name: 'Reels', icon: 'fa-video', type: 'reels' },
+                { id: 'kwun', name: '觀塘', icon: 'fa-store', type: 'split' },
+                { id: 'stock', name: '入貨', icon: 'fa-box-open', type: 'simple' },
+                { id: 'checkin', name: '打卡', icon: 'fa-id-card-clip', type: 'checkin' }
+            ];
+
+            React.useEffect(() => { const unsubscribe = auth.onAuthStateChanged((u) => { if (u) setUser({ type: 'firebase', uid: u.uid, email: u.email, displayName: u.displayName }); }); return () => unsubscribe(); }, []);
+
+            React.useEffect(() => {
+                if (user && user.type === 'guest') {
+                    const d = localStorage.getItem('hk_cyber_data_v2'); const s = localStorage.getItem('hk_cyber_sources');
+                    if(d) setRecords(JSON.parse(d)); if(s) setCustomSources(JSON.parse(s));
+                } else if (user && user.type === 'firebase') {
+                    setIsLoading(true);
+                    const unsubRec = db.collection('users').doc(user.uid).collection('records').orderBy('date', 'desc').onSnapshot(snap => { setRecords(snap.docs.map(d=>({id:d.id, ...d.data()}))); setIsLoading(false); });
+                    const unsubSet = db.collection('users').doc(user.uid).collection('settings').doc('general').onSnapshot(doc => { if(doc.exists) setCustomSources(doc.data().customSources); });
+                    return () => { unsubRec(); unsubSet(); };
+                }
+            }, [user]);
+
+            React.useEffect(() => { if(notification) { const t=setTimeout(()=>setNotification(null), 2500); return ()=>clearTimeout(t); } }, [notification]);
+            const triggerNotification = (message, type='success') => setNotification({message, type});
+            const recalcBalance = (data) => { setBalance(data.reduce((acc, curr) => acc + (curr.amount || 0), 0)); };
+            const showDialog = (type, title, message, onConfirm) => { playClickSound(); setDialogConfig({isOpen:true, type, title, message, onConfirm:()=>{onConfirm(); setDialogConfig(prev=>({...prev, isOpen:false}));}}); };
+
+            const handleSaveRecord = (recordData) => {
+                if (editingRecord) {
+                    const updatedFields = { ...recordData };
+                    if (user.type === 'guest') { const up = records.map(r=>r.id===editingRecord.id ? {...r, ...updatedFields} : r); setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                    else { db.collection('users').doc(user.uid).collection('records').doc(editingRecord.id).update(updatedFields); }
+                    triggerNotification('紀錄已更新');
+                } else {
+                    const newRecord = { date: new Date().toISOString(), ...recordData };
+                    if (user.type === 'guest') { const up = [{id:Date.now(), ...newRecord}, ...records]; setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                    else { db.collection('users').doc(user.uid).collection('records').add(newRecord); }
+                    triggerNotification('新紀錄已儲存');
+                }
+            };
+            const handleDeleteRecordRequest = () => { showDialog('danger', '確認刪除', '此操作無法復原。', () => { 
+                if(!editingRecord) return;
+                if(user.type==='guest') { const up = records.filter(r=>r.id!==editingRecord.id); setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                else { db.collection('users').doc(user.uid).collection('records').doc(editingRecord.id).delete(); }
+                triggerNotification('紀錄已刪除'); setFormOpen(false); 
+            }); };
+            const handleToggleRefund = (record) => {
+                const newStatus = !record.isOffset;
+                if(user.type==='guest') { const up = records.map(r=>r.id===record.id?{...r, isOffset:newStatus}:r); setRecords(up); localStorage.setItem('hk_cyber_data_v2', JSON.stringify(up)); }
+                else { db.collection('users').doc(user.uid).collection('records').doc(record.id).update({isOffset:newStatus}); }
+                playClickSound(); triggerNotification(newStatus?'支出已抵消':'已恢復支出計算');
+            };
+
+            const handleGuest = () => setUser({type:'guest', name:'Guest'});
+            const handleGoogleLogin = async () => { setAuthError(''); try { await auth.signInWithPopup(googleProvider); } catch(e) { setAuthError(e.message); } };
+            const handleEmailLogin = async (e,p) => { setAuthError(''); try { await auth.signInWithEmailAndPassword(e,p); } catch(e) { setAuthError(e.message); throw e; } };
+            const handleEmailRegister = async (e,p) => { setAuthError(''); try { await auth.createUserWithEmailAndPassword(e,p); } catch(e) { setAuthError(e.message); throw e; } };
+            const handleLogoutRequest = () => { showDialog('danger', '系統登出', '確定要登出嗎？', () => { auth.signOut(); setUser(null); setView('month_select'); }); };
+            const handleUpdateSources = (ns) => { setCustomSources(ns); if(user.type==='guest') localStorage.setItem('hk_cyber_sources', JSON.stringify(ns)); else db.collection('users').doc(user.uid).collection('settings').doc('general').set({customSources:ns},{merge:true}); triggerNotification('設定已更新'); };
+            const openAddModal = (id) => { setEditingRecord(null); setInitialCatId(id); setFormOpen(true); playClickSound(); };
+            const openEditModal = (r) => { setEditingRecord(r); setInitialCatId(r.catId); setFormOpen(true); playClickSound(); };
+
+            if (!user) return <LoginScreen onGoogleLogin={handleGoogleLogin} onGuest={handleGuest} onEmailLogin={handleEmailLogin} onEmailRegister={handleEmailRegister} errorMsg={authError} />;
+
+            if (view === 'month_select') {
+                return <MonthSelectScreen user={user} records={records} onSelectMonth={(y, m) => { setSelectedPeriod({year:y, month:m}); setView('overview'); }} onLogout={handleLogoutRequest} />;
+            }
+
+            return (
+                <div className="relative min-h-screen font-sans selection:bg-cyber-neon selection:text-black">
+                    <header className="sticky top-0 z-30 glass-panel border-b-0 border-b-white/5 px-4 py-3 flex justify-between items-center">
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <i className="fas fa-user-circle text-cyber-neon"></i>
+                                <span className="text-white font-bold text-sm tracking-wide">{user.email?.split('@')[0] || 'Guest'}</span>
+                            </div>
+                            <span className="text-[10px] text-gray-500 font-num tracking-widest">{APP_VERSION}</span>
+                        </div>
+                        <div className="flex items-center gap-4"><button onClick={()=>setSettingsOpen(true)} className="text-gray-400 hover:text-white transition-colors"><i className="fas fa-cog"></i></button><button onClick={handleLogoutRequest} className="text-gray-400 hover:text-cyber-pink transition-colors"><i className="fas fa-power-off"></i></button></div>
+                    </header>
+                    <main>
+                        {view === 'overview' && <OverviewView records={records} balance={0} isLoading={isLoading} onRecordClick={openEditModal} onToggleRefund={handleToggleRefund} selectedPeriod={selectedPeriod} onSwitchMonth={()=>setView('month_select')} />}
+                        
+                        {/* UPDATE: Pass records and click handler to ClockInView */}
+                        {view === 'checkin' && <ClockInView user={user} onClockAction={(msg) => triggerNotification(msg)} onSaveRecord={handleSaveRecord} records={records} onRecordClick={openEditModal} />}
+                        
+                        {view !== 'overview' && view !== 'checkin' && view !== 'month_select' && (() => {
+                            const cat = categories.find(c => c.id === view);
+                            if (!cat) return null; 
+                            return (
+                                <div className="pt-6 px-4 animate-fade-in relative min-h-screen">
+                                    <div className="flex items-center justify-between mb-6 border-b border-gray-800 pb-2"><h2 className="text-3xl font-bold text-white tracking-widest text-shadow-neon">{cat.name}</h2><button onClick={()=>setView('overview')} className="text-xs border border-gray-600 px-3 py-1 rounded text-gray-400 hover:text-white">返回</button></div>
+                                    <HistoryList records={records} filterId={cat.id} onRecordClick={openEditModal} onToggleRefund={handleToggleRefund} />
+                                    <button onClick={() => openAddModal(cat.id)} className="fixed bottom-24 right-6 w-16 h-16 bg-cyber-neon text-black rounded-full shadow-[0_0_30px_rgba(0,243,255,0.4)] flex items-center justify-center text-2xl z-40 active:scale-90 transition-transform hover:bg-white border-2 border-white/50"><i className="fas fa-plus"></i></button>
+                                </div>
+                            );
+                        })()}
+                    </main>
+                    <DynamicNotification notification={notification} />
+                    <RecordFormModal isOpen={isFormOpen} onClose={()=>setFormOpen(false)} categories={categories} initialData={editingRecord} initialCatId={initialCatId} customSources={customSources} onSave={handleSaveRecord} onRequestDelete={handleDeleteRecordRequest} />
+                    <SettingsModal isOpen={isSettingsOpen} onClose={()=>setSettingsOpen(false)} customSources={customSources} onAddSource={(s) => handleUpdateSources([...customSources, s])} onDeleteSource={(i) => handleUpdateSources(customSources.filter((_, idx) => idx !== i))} user={user} />
+                    <SystemDialog isOpen={dialogConfig.isOpen} type={dialogConfig.type} title={dialogConfig.title} message={dialogConfig.message} onConfirm={dialogConfig.onConfirm} onCancel={() => setDialogConfig(prev => ({ ...prev, isOpen: false }))} />
+                    <nav className="fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 pb-safe pt-2 px-1 z-40">
+                        <div className="flex justify-around items-end pb-4">
+                            <NavBtn icon="fa-chart-pie" label="總覽" active={view==='overview'} onClick={()=>{playClickSound(); setView('overview');}} />
+                            <NavBtn icon="fa-building" label="駱駝漆" active={view==='camel'} onClick={()=>{playClickSound(); setView('camel');}} />
+                            <NavBtn icon="fa-video" label="Reels" active={view==='reels'} onClick={()=>{playClickSound(); setView('reels');}} />
+                            <NavBtn icon="fa-store" label="觀塘" active={view==='kwun'} onClick={()=>{playClickSound(); setView('kwun');}} />
+                            <NavBtn icon="fa-clock" label="打卡" active={view==='checkin'} onClick={()=>{playClickSound(); setView('checkin');}} />
+                            <NavBtn icon="fa-box" label="入貨" active={view==='stock'} onClick={()=>{playClickSound(); setView('stock');}} />
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
